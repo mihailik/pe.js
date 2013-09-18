@@ -2936,7 +2936,7 @@ var pe;
                 this.type = null;
             }
             FieldDefinition.prototype.toString = function () {
-                return this.name + (this.value ? " = " + this.value : "");
+                return this.name + (this.type ? ":" + this.type : "") + (this.value ? " = " + this.value : "");
             };
 
             FieldDefinition.prototype.internalReadRow = function (reader) {
@@ -3731,7 +3731,7 @@ var pe;
                         throw new Error("Unknown table kind " + tableKind + " in encoded index.");
                 }
 
-                var typeReference = table[index];
+                var typeReference = table[index - 1];
 
                 return typeReference.definition ? typeReference.definition : typeReference;
             };

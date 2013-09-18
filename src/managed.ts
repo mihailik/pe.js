@@ -1096,7 +1096,7 @@ module pe.managed {
 		value: ConstantValue;
 
 		toString() {
-			return this.name + (this.value ? " = " + this.value : "");
+			return this.name + (this.type ? ":" + this.type : "") + (this.value ? " = " + this.value : "");
 		}
 
 		internalReadRow(reader: TableStreamReader): void {
@@ -1894,7 +1894,7 @@ module pe.managed {
 					throw new Error("Unknown table kind " + tableKind + " in encoded index.");
 			}
 
-			var typeReference = table[index];
+			var typeReference = table[index-1];
 
 			return typeReference.definition ? typeReference.definition : typeReference;
 		}
