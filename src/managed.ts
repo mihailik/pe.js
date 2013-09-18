@@ -1096,7 +1096,7 @@ module pe.managed {
 		value: ConstantValue;
 
 		toString() {
-			return this.name + (this.type ? ":" + this.type : "") + (this.value ? " = " + this.value : "");
+			return this.name + (this.type ? ": " + this.type : "") + (this.value ? " = " + this.value : "");
 		}
 
 		internalReadRow(reader: TableStreamReader): void {

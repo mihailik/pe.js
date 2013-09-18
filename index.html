@@ -2936,7 +2936,7 @@ var pe;
                 this.type = null;
             }
             FieldDefinition.prototype.toString = function () {
-                return this.name + (this.type ? ":" + this.type : "") + (this.value ? " = " + this.value : "");
+                return this.name + (this.type ? ": " + this.type : "") + (this.value ? " = " + this.value : "");
             };
 
             FieldDefinition.prototype.internalReadRow = function (reader) {
