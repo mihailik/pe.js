@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" style="height: 100%;">
+<head>
+	<title>PE.js demo</title>
+	<script src="demo/knockout-2.2.0.js"></script>
+	<script src="pe.js"></script>
+	<style>
+	.dragover {
+		border: solid 4px gold;
+	}
+	.leftAddress {
+		font-size: 80%;
+		opacity: 0.5;
+	}
+
+	.headerTitle {
+		font-size: 200%;
+		opacity: 0.5;
+	}
+	.important-background {
+		background: rgb(255, 214, 130);
+		border: solid 1px gold;
+		margin: -2px;
+		padding: 1px;
+		border-radius: 3px;
+	}
+	.important-border{
+		border: solid 1px gold;
+		margin: -2px;
+		padding: 1px;
+		border-radius: 3px;
+	}
+
+	.field-value {
+		position: relative;
+	}
+
+	.field-value .label {
+		position: relative;
+		opacity: 0.6;
+	}
+
+	.field-value .value-aligned {
+		position: absolute;
+		top: 0px;
+		right: 0px;
+	}
+	.field-value .value {
+	}
+
+	.bytes {
+		background: rgb(230, 228, 228);
+	}
+	</style>
+	<script>
+
+var loadedFiles = {};
+
+function init() {
+  dragSite.ondragover = dragSite_dragenter;
+  dragSite.ondragenter = dragSite_dragenter;
+  dragSite.ondragleave = dragSite_dragleave;
+  dragSite.ondrop = dragSite_drop;
+
+  if (window.opener && window.location.hash) {
+	var loadFileArgument = window.opener.loadedFiles[window.location.hash];
+	delete window.opener.loadedFiles[window.location.hash];
+	window.location.hash = "";
+
+	onFileLoaded(loadFileArgument.file, loadFileArgument.PEFileHeaders, loadFileArgument.reader);
+  }
+  else {
+	var bufferReader = new pe.io.BufferReader(sampleBuf);
+	var pef = new pe.headers.PEFileHeaders();
+	pef.read(bufferReader);
+	onFileLoaded({name: "sample.exe"}, pef, bufferReader);
+	isInitialFileLoaded = true; 
+  }
+
+  loadInput.onchange = function(evt) {
+	  if (!evt || !evt.target || !evt.target.files) {
+		  alert("File API is not supported by the browser.");
+		  return;
+	  }
+
+	  handleDrop(evt.target.files);
+  };
+}
+
+function dragSite_dragenter(e) {
+  dragSite.className += " dragover";
+  e.cancelBubble = true;
+  return false;
+}
+
+function dragSite_dragleave(e) {
+  dragSite.className = dragSite.className.replace(/ dragover/g, "");
+  e.cancelBubble = true;
+  return false;
+}
+
+function dragSite_drop(e) {
+  dragSite.className = dragSite.className.replace(/ dragover/g, "");
+  e.cancelBubble = true;
+
+  try {
+  if (e.dataTransfer && e.dataTransfer.files) {
+	handleDrop(e.dataTransfer.files);
+  }
+  }
+  catch (error) {
+	setTimeout(function() {
+		alert(error);
+	}, 10);
+  }
+
+  return false;
+}
+
+function handleDrop(files) {
+  for (var i = 0; i < files.length; i++) {
+	loadFile(files[i]);
+  }
+}
+
+function loadFile(f) {
+  pe.io.getFileBufferReader(
+	f,
+	function(reader) {
+	  var pef = new pe.headers.PEFileHeaders();
+	  pef.read(reader);
+	  onFileLoaded(f, pef, reader);
+	},
+	function(errorGettingReader) {
+	  alert(errorGettingReader);
+	});
+}
+
+var isInitialFileLoaded = null;
+
+function onFileLoaded(f, pef, reader) {
+  if (isInitialFileLoaded===null || isInitialFileLoaded===true) {
+	renderPEFileHeaders(f, pef, reader);
+	isInitialFileLoaded = false;
+	return;
+  }
+
+  var newLinkToOpen = document.createElement("a");
+  newLinkToOpen.href = "#";
+  newLinkToOpen.innerText = f.name + " " + pef;
+  newLinkToOpen.textContet = f.name + " " + pef;
+  linksToOpen.appendChild(newLinkToOpen);
+  var emptySpace = document.createElement("span");
+  emptySpace.innerText = " ";
+  emptySpace.textContent = " ";
+  linksToOpen.appendChild(emptySpace);
+
+  newLinkToOpen.onclick = function() {
+	linksToOpen.removeChild(newLinkToOpen);
+	linksToOpen.removeChild(emptySpace);
+
+	var createUrl = window.location + "";
+	if (window.location.hash && window.location.hash.length>0)
+	  createUrl = createUrl.substring(0, createUrl.length - window.location.hash.length);
+
+	if (createUrl.substring(createUrl.length-1)==="#")
+	  createUrl = createUrl.substring(0, createUrl.length-1);
+
+	createUrl += "#" + f.name;
+
+	loadedFiles["#" + f.name] = { file: f, PEFileHeaders: pef, reader: reader };
+
+	var newWindow = window.open(createUrl);
+  };
+}
+
+function renderPEFileHeaders(f, pef, reader) {
+	titleElement.innerText = f.name;
+	titleElement.textContent = f.name;
+  
+  try {
+	  ko.applyBindings(pef, peDiv);
+
+	  setTimeout(function () {
+		  parseAndRenderManaged(pef, reader);
+	  }, 100);
+  }
+  catch(koError) {
+  alert(koError);
+  }
+}
+
+var asm;
+
+function parseAndRenderManaged(pef, reader) {
+	asm = new pe.managed.AssemblyDefinition();
+	asm.headers = pef;
+	try {
+		asm.read(reader);
+	}
+	catch (asmError) {
+		var errorDetails = asmError + "";
+		if (errorDetails.indexOf(asmError.message)<0)
+			errorDetails = asmError.message;
+
+		alert("Error reading managed metadata: " + errorDetails+"\n\nPlease attach debugger to see the error repeated.");
+
+		// repeat again, for detailed diagnostics
+		reader.offset = 0;
+		asm = new pe.managed.AssemblyDefinition();
+		asm.headers = pef;
+		asm.read(reader);
+	}
+
+	var dump = asm + "\n";
+	for (var iMod = 0; iMod < asm.modules.length; iMod++) {
+		dump += "	" + asm.modules[iMod] + "\n";
+
+		for (var iType = 0; iType < asm.modules[iMod].types.length; iType++) {
+			dump += "		" + asm.modules[iMod].types[iType] + "\n";
+
+			for (var iField = 0; iField < asm.modules[iMod].types[iType].fields.length; iField++) {
+				dump += "			" + asm.modules[iMod].types[iType].fields[iField] + "\n";
+			}
+			for (var iMethod = 0; iMethod < asm.modules[iMod].types[iType].methods.length; iMethod++) {
+				dump += "			" + asm.modules[iMod].types[iType].methods[iMethod] + "\n";
+			}
+		}
+	}
+
+	managedDiv.innerText = dump;
+	managedDiv.textContent = dump;
+}
+
+function formatEnum(x, y) {
+  var result = pe.io.formatEnum(x, y);
+  return result.split("|").join(" | ");
+}
+
+function formatHex(value) {
+	if (typeof value == "null"
+		|| value === null)
+		return "null";
+	else if(typeof value == "undefined")
+		return "undefined";
+	else if (value==0)
+		return "0";
+	else if (typeof value == "number")
+		return value.toString(16).toUpperCase() + "h";
+	else
+		return value + "";
+}
+
+function formatAddress(value) {
+	if (typeof value == "null"
+		|| value === null)
+		return "null";
+	else if(typeof value == "undefined")
+		return "undefined";
+	
+	var result = value.toString(16).toUpperCase();
+	if (result.length<=4)
+		result = "0000".substring(result.length) + result + "h";
+	else
+		result = "00000000".substring(result.length) + result + "h";
+
+	return result;
+}
+
+function formatBytes(bytes) {
+	var concatResult = [];
+	for (var i = 0; i < bytes.length; i++) {
+		if (i > 0) {
+			if (i % 16 == 0)
+				concatResult.push("\r\n");
+			else if (i % 8 == 0)
+				concatResult.push(" | ");
+			else if (i % 4 == 0)
+				concatResult.push(" ");
+		}
+		
+		if (bytes[i]<16)
+			concatResult.push("0" + bytes[i].toString(16).toUpperCase());
+		else
+			concatResult.push(bytes[i].toString(16).toUpperCase());
+	}
+
+	return " " + concatResult.join(" ");
+}
+
+
+window.onload = init;
+	</script>
+</head>
+<body style="overflow: auto; margin: 0px; padding: 0px; height: 100%; font-family: 'Segoe UI', sans-serif;">
+
+<div id="dragSite" style="height: 100%; margin: 10px 5px;">
+
+<table style="width:100%;"><tr><td>
+<h2 id="titleElement">PE.js demo</h2>
+</td><td align="right">
+	<input id="loadInput" type="file" multiple="multiple" />
+</td></tr></table>
+<div id="linksToOpen">
+</div>
+ 
+
+<div id="peSite">
+	<div id ="peDiv" style="font-size: 78%;">
+		<table>
+			<tr>
+				<td class="leftAddress" valign="bottom">
+					0000h
+				</td>
+				<td class="headerTitle" colspan="4" width="100%">
+					DOS header
+				</td>
+			</tr>
+			<tr data-bind="attr: { height: 0x40 * 1.5 }">
+				<td></td>
+				<td width="25%">
+					<div class="important-background">
+						<div class="field-value">
+							<div class="label">Signature</div>
+							<div data-bind="text: formatEnum(dosHeader.mz, pe.headers.MZSignature)" class="value-aligned"></div>
+						</div>
+					</div>
+					<div class="field-value">
+						<div class="label">cblp</div>
+						<div data-bind="text: dosHeader.cblp" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">cp</div>
+						<div data-bind="text: dosHeader.cp" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">crlc</div>
+						<div data-bind="text: dosHeader.crlc" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">cparhdr</div>
+						<div data-bind="text: dosHeader.cparhdr" class="value-aligned"></div>
+					</div>
+				</td>
+				<td width="25%">
+					<div class="field-value">
+						<div class="label">minalloc</div>
+						<div data-bind="text: dosHeader.minalloc" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">maxalloc</div>
+						<div data-bind="text: dosHeader.maxalloc" class="value-aligned"></div>
+					</div>
+					<div class="important-border">
+						<div class="field-value">
+							<div class="label">ss</div>
+							<div data-bind="text: dosHeader.ss" class="value-aligned"></div>
+						</div>
+						<div class="field-value">
+							<div class="label">sp</div>
+							<div data-bind="text: dosHeader.sp" class="value-aligned"></div>
+						</div>
+					</div>
+					<div class="field-value">
+						<div class="label">csum</div>
+						<div data-bind="text: dosHeader.csum" class="value-aligned"></div>
+					</div>
+				</td>
+				<td width="25%">
+					<div class="important-border">
+						<div class="field-value">
+							<div class="label">cs</div>
+							<div data-bind="text: dosHeader.cs" class="value-aligned"></div>
+						</div>
+						<div class="field-value">
+							<div class="label">ip</div>
+							<div data-bind="text: dosHeader.ip" class="value-aligned"></div>
+						</div>
+					</div>
+					<div class="field-value">
+						<div class="label">lfarlc</div>
+						<div data-bind="text: dosHeader.lfarlc" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">ovno</div>
+						<div data-bind="text: dosHeader.ovno" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">res1</div>
+						<div data-bind="text: dosHeader.res1" class="value-aligned"></div>
+					</div>
+				</td>
+				<td width="25%">
+					<div class="field-value">
+						<div class="label">oemid</div>
+						<div data-bind="text: dosHeader.oemid" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">oeminfo</div>
+						<div data-bind="text: dosHeader.oeminfo" class="value-aligned"></div>
+					</div>
+					<table width="80%">
+						<tr>
+							<td with="50%">
+								<div class="field-value">
+									<div class="label">R0</div>
+									<div data-bind="text: dosHeader.reserved[0]" class="value-aligned"></div>
+								</div>
+							</td>
+							<td with="50%">
+								<div class="field-value">
+									<div class="label">R1</div>
+									<div data-bind="text: dosHeader.reserved[1]" class="value-aligned"></div>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<div class="field-value">
+									<div class="label">R2</div>
+									<div data-bind="text: dosHeader.reserved[2]" class="value-aligned"></div>
+								</div>
+							</td>
+							<td>
+								<div class="field-value">
+									<div class="label">R3</div>
+									<div data-bind="text: dosHeader.reserved[3]" class="value-aligned"></div>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<div class="field-value">
+									<div class="label">R4</div>
+									<div data-bind="text: dosHeader.reserved[4]" class="value-aligned"></div>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td style="border-top: solid 1px silver;" colspan="4">
+				 </td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>
+					<div class="field-value">
+						<div class="label">lfanew</div>
+						<div data-bind="text: formatHex(dosHeader.lfanew)" class="value-aligned"></div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td class="leftAddress" valign="bottom">
+					<div data-bind="text: formatAddress(dosHeader.lfanew - dosStub.length)"></div>
+				</td>
+				<td class="headerTitle" colspan="4">
+					DOS stub
+				</td>
+			</tr>
+			<tr data-bind="attr: { height: dosStub.length * 1.5 }">
+				<td></td>
+				<td colspan="4">
+					<pre class="bytes" data-bind="text: formatBytes(dosStub)"></pre>
+				</td>
+			</tr>
+			<tr>
+				<td class="leftAddress">
+					<div data-bind="text: formatAddress(dosHeader.lfanew)"></div>
+				</td>
+				<td class="headerTitle" colspan="4">
+					PE header
+				</td>
+			</tr>
+			<tr data-bind="attr: { height: 24 * 1.5 }">
+				<td></td>
+				<td valign="top">
+					<div class="important-background">
+						<div class="field-value">
+							<div class="label">PESignature</div>
+							<div data-bind="text: formatEnum(peHeader.pe, pe.headers.PESignature)" class="value-aligned"></div>
+						</div>
+					</div>
+					<div class="field-value">
+						<div class="label">Machine</div>
+						<div data-bind="text: formatEnum(peHeader.machine, pe.headers.Machine)" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">NumberOfSections</div>
+						<div data-bind="text: peHeader.numberOfSections" class="value-aligned"></div>
+					</div>
+				</td>
+				<td valign="top">
+					<div class="field-value">
+						<div class="label">Timestamp</div>
+						<div data-bind="text: peHeader.timestamp" class="value"></div>
+					</div>
+				</td>
+				<td valign="top">
+					<div class="field-value">
+						<div class="label">SzOptionalHeader</div>
+						<div data-bind="text: peHeader.sizeOfOptionalHeader" class="value-aligned"></div>
+					</div>
+				</td>
+				<td valign="top">
+					<div class="field-value">
+						<div class="label">Characteristics</div>
+						<div data-bind="text: formatEnum(peHeader.characteristics, pe.headers.ImageCharacteristics)" class="value"></div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td class="leftAddress">
+					<div  data-bind="text: formatAddress(dosHeader.lfanew + 24)"></div>
+				</td>
+				<td class="headerTitle" colspan="4">
+					Optional header
+				</td>
+			</tr>
+			<tr data-bind="attr: { height: 96 * 1.5 }">
+				<td></td>
+				<td>
+					<div class="important-background">
+						<div class="field-value">
+							<div class="label">PEMagic</div>
+							<div data-bind="text: formatEnum(optionalHeader.peMagic, pe.headers.PEMagic)" class="value-aligned"></div>
+						</div>
+					</div>
+					<div class="important-border">
+						<div class="field-value">
+							<div class="label">LinkerVersion</div>
+							<div data-bind="text: optionalHeader.linkerVersion" class="value-aligned"></div>
+						</div>
+					</div>
+					<div class="field-value">
+						<div class="label">SzCode</div>
+						<div data-bind="text: optionalHeader.sizeOfCode" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">SzInitData</div>
+						<div data-bind="text: optionalHeader.sizeOfInitializedData" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">SzUninitData</div>
+						<div data-bind="text: optionalHeader.sizeOfUninitializedData" class="value-aligned"></div>
+					</div>
+				</td>
+				<td>
+					<div class="field-value">
+						<div class="label">AddrEntry</div>
+						<div data-bind="text: formatHex(optionalHeader.addressOfEntryPoint)" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">BaseOfCode</div>
+						<div data-bind="text: formatHex(optionalHeader.baseOfCode)" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">BaseOfData</div>
+						<div data-bind="text: formatHex(optionalHeader.baseOfData)" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">ImageBase</div>
+						<div data-bind="text: formatHex(optionalHeader.imageBase)" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">SectionAlignment</div>
+						<div data-bind="text: optionalHeader.sectionAlignment" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">FileAlignment</div>
+						<div data-bind="text: optionalHeader.fileAlignment" class="value-aligned"></div>
+					</div>
+				</td>
+				<td valign="top">
+					<div class="important-border">
+						<div class="field-value">
+							<div class="label">OSVersion</div>
+							<div data-bind="text: optionalHeader.operatingSystemVersion" class="value-aligned"></div>
+						</div>
+						<div class="field-value">
+							<div class="label">ImgVersion</div>
+							<div data-bind="text: optionalHeader.imageVersion" class="value-aligned"></div>
+						</div>
+						<div class="field-value">
+							<div class="label">SubsystemVersion</div>
+							<div data-bind="text: optionalHeader.subsystemVersion" class="value-aligned"></div>
+						</div>
+					</div>
+				</td>
+				<td valign="top">
+					<div class="field-value">
+						<div class="label">Win32Version</div>
+						<div data-bind="text: optionalHeader.win32VersionValue" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">SzImage</div>
+						<div data-bind="text: optionalHeader.sizeOfImage" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">SzHeaders</div>
+						<div data-bind="text: optionalHeader.sizeOfHeaders" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">CheckSum</div>
+						<div data-bind="text: optionalHeader.checkSum" class="value-aligned"></div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td style="border-top: 1px solid silver;" colspan="4"></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td valign="top">
+					<div class="field-value">
+						<div class="label">Subsystem</div>
+						<div data-bind="text: formatEnum(optionalHeader.subsystem, pe.headers.Subsystem)" class="value-aligned"></div>
+					</div>
+				</td>
+				<td valign="top">
+					<div class="field-value">
+						<div class="label">DllCharacteristics</div>
+						<div data-bind="text: formatEnum(optionalHeader.dllCharacteristics, pe.headers.DllCharacteristics)" class="value"></div>
+					</div>
+				</td>
+				<td valign="top">
+					<div class="field-value">
+						<div class="label">SzStackReserve</div>
+						<div data-bind="text: optionalHeader.sizeOfStackReserve" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">SzStackCommit</div>
+						<div data-bind="text: optionalHeader.sizeOfStackCommit" class="value-aligned"></div>
+					</div>
+				</td>
+				<td valign="top">
+					<div class="field-value">
+						<div class="label">LoaderFlags</div>
+						<div data-bind="text: formatHex(optionalHeader.loaderFlags)" class="value-aligned"></div>
+					</div>
+					<div class="field-value">
+						<div class="label">NumRvaAndSizes</div>
+						<div data-bind="text: optionalHeader.numberOfRvaAndSizes" class="value-aligned"></div>
+					</div>
+				</td>
+			</tr>
+<!--			<tr>
+				<td class="leftAddress">XXXX</td>
+				<td class="headerTitle" colspan="4">
+					Section headers
+				</td>
+			</tr>-->
+
+			<!-- k-o foreach: sectionHeaders -->
+<!--				<tr data-bind="visible: $index() != 0">
+					<td></td>
+					<td style="border-top: solid 1px silver" colspan="4">
+					</td>
+				</tr>
+				<tr data-bind="attr: { ssheight: 40 * 1.5 }">
+					<td></td>
+					<td valign="top">
+						<div class="important-background">
+							<div class="field-value">
+								<div class="label">name</div>
+								<div data-bind="text: name" class="value-aligned"></div>
+							</div>
+						</div>
+					</td>
+					<td valign="top">
+						<div class="important-border">
+							<div class="field-value">
+								<div class="label">Virtual</div>
+								<div data-bind="text: virtualRange" class="value-aligned"></div>
+							</div>
+							<div class="field-value">
+								<div class="label">Raw</div>
+								<div data-bind="text: physicalRange" class="value-aligned"></div>
+							</div>
+						</div>
+					</td>
+					<td valign="top">
+						<div class="field-value">
+							<div class="label">Relocations</div>
+							<div data-bind="text: pointerToRelocations" class="value-aligned"></div>
+						</div>
+						<div class="field-value">
+							<div class="label">LineNums</div>
+							<div data-bind="text: pointerToLinenumbers" class="value-aligned"></div>
+						</div>
+						<div class="field-value">
+							<div class="label">#Relocations</div>
+							<div data-bind="text: numberOfRelocations" class="value-aligned"></div>
+						</div>
+						<div class="field-value">
+							<div class="label">#LineNums</div>
+							<div data-bind="text: numberOfLinenumbers" class="value-aligned"></div>
+						</div>
+					</td>
+					<td valign="top">
+						<div class="field-value">
+							<div class="label">Characteristics</div>
+							<div data-bind="text: formatEnum(characteristics, pe.headers.SectionCharacteristics)" class="value"></div>
+						</div>
+					</td>
+				</tr>-->
+			<!-- /k-o -->
+
+			<!-- k-o foreach: sectionHeaders -->
+
+<!--			<tr>
+				<td class="leftAddress" data-bind="text: formatAddress(physicalRange.address)" valign="top">
+				</td>
+				<td valign="top" data-bind="text: name" style="border: solid 2px silver;" colspan="4">
+
+
+				</td>
+			</tr>-->
+
+			<!-- /k-o -->
+
+		</table>
+	</div>
+	
+	<pre id="managedDiv">
+
+	</pre>
+ </div>
+
+</div>	
+
+<script>
+	var sampleBufSource =
+[77, 90,144,, 3,,,, 4,,,,255,255,,,184,,,,,,,, 64,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,128,,,,14, 31,186,14,,180, 9,205, 33,184,1, 76,205, 33, 84,104,105,115, 32,112,114,111,103,114, 97,109, 32, 99, 97,110,110,111,116, 32, 98,101, 32,114,117,110, 32,105,110, 32, 68, 79, 83, 32,109,111,100,101, 46,13,13,10, 36,,,,,,,, 80, 69,,, 76,1, 3,,195,135,151, 80,,,,,,,,,224,,2,1,11,1, 8,,, 4,,,, 6,,,,,,, 62, 35,,,, 32,,,, 64,,,,, 64,,, 32,,,,2,,, 4,,,,,,,, 4,,,,,,,,,128,,,,2,,,,,,, 3,, 64,133,,,16,,,16,,,,,16,,,16,,,,,,,16,,,,,,,,,,,,228, 34,,, 87,,,,, 64,,,160,2,,,,,,,,,,,,,,,,,,,, 96,,,12,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 32,,, 8,,,,,,,,,,,, 8, 32,,, 72,,,,,,,,,,,, 46,116,101,120,116,,,, 68, 3,,,, 32,,,, 4,,,,2,,,,,,,,,,,,,,, 32,,, 96, 46,114,115,114, 99,,,,160,2,,,, 64,,,, 4,,,, 6,,,,,,,,,,,,,,, 64,,, 64, 46,114,101,108,111, 99,,,12,,,,, 96,,,,2,,,,10,,,,,,,,,,,,,,, 64,,, 66,,,,,,,,,,,,,,,,, 32, 35,,,,,,, 72,,,,2,, 5,,104, 32,,,124,2,,,1,,,,1,,, 6,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 54,,114,1,,,112, 40, 3,,,10,, 42, 30,2, 40, 4,,,10, 42,,, 66, 83, 74, 66,1,,1,,,,,,12,,,,118, 50, 46, 48, 46, 53, 48, 55, 50, 55,,,,, 5,,108,,,,228,,,, 35,126,,, 80,1,,,184,,,, 35, 83,116,114,105,110,103,115,,,,, 8,2,,, 32,,,, 35, 85, 83,, 40,2,,,16,,,, 35, 71, 85, 73, 68,,,, 56,2,,, 68,,,, 35, 66,108,111, 98,,,,,,,,2,,,1, 71,20,,, 9,,,,,250,1, 51,,22,,,1,,,, 4,,,,2,,,,2,,,, 4,,,,2,,,,1,,,,1,,,,,,10,,1,,,,,, 6,, 45,, 38,, 6,, 95,, 63,, 6,,127,, 63,, 6,,164,, 38,,,,,,1,,,,,,1,,1,,,,16,,21,,,, 5,,1,,1,, 80, 32,,,,,145,, 52,,10,,1,, 94, 32,,,,,134,24, 57,,14,,1,,17,, 57,,18,,25,, 57,,14,, 33,,172,,23,, 9,, 57,,14,, 46,,11,,28,, 46,,19,, 37,, 4,128,,,,,,,,,,,,,,,,,157,,,,2,,,,,,,,,,,,1,,29,,,,,,,,,,, 60, 77,111,100,117,108,101, 62,,115, 97,109,112,108,101, 46,101,120,101,, 80,114,111,103,114, 97,109,,109,115, 99,111,114,108,105, 98,, 83,121,115,116,101,109,, 79, 98,106,101, 99,116,, 77, 97,105,110,, 46, 99,116,111,114,, 83,121,115,116,101,109, 46, 82,117,110,116,105,109,101, 46, 67,111,109,112,105,108,101,114, 83,101,114,118,105, 99,101,115,, 67,111,109,112,105,108, 97,116,105,111,110, 82,101,108, 97,120, 97,116,105,111,110,115, 65,116,116,114,105, 98,117,116,101,, 82,117,110,116,105,109,101, 67,111,109,112, 97,116,105, 98,105,108,105,116,121, 65,116,116,114,105, 98,117,116,101,,115, 97,109,112,108,101,, 67,111,110,115,111,108,101,, 87,114,105,116,101, 76,105,110,101,,,,,27, 72,,101,,108,,108,,111,, 44,, 32,, 87,,111,,114,,108,,100,, 33,,,,,,146,199,156,13, 90,202,19, 73,158,118,143,24,114,188,194, 39,, 8,183,122, 92, 86,25, 52,224,137, 3,,,1, 3, 32,,1, 4, 32,1,1, 8, 4,,1,1,14, 8,1,, 8,,,,,, 30,1,,1,, 84,2,22, 87,114, 97,112, 78,111,110, 69,120, 99,101,112,116,105,111,110, 84,104,114,111,119,115,1,12, 35,,,,,,,,,,, 46, 35,,,, 32,,,,,,,,,,,,,,,,,,,,,,, 32, 35,,,,,,,,,,,,,,,,,,,,, 95, 67,111,114, 69,120,101, 77, 97,105,110,,109,115, 99,111,114,101,101, 46,100,108,108,,,,,,255, 37,, 32, 64,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,1,,16,,,,24,,,128,,,,,,,,,,,,,,,1,,1,,,, 48,,,128,,,,,,,,,,,,,,,1,,,,,, 72,,,, 88, 64,,, 68,2,,,,,,,,,,, 68,2, 52,,,, 86,, 83,, 95,, 86,, 69,, 82,, 83,, 73,, 79,, 78,, 95,, 73,, 78,, 70,, 79,,,,,,189, 4,239,254,,,1,,,,,,,,,,,,,,,,,, 63,,,,,,,, 4,,,,1,,,,,,,,,,,,,,,, 68,,,,1,, 86,, 97,,114,, 70,,105,,108,,101,, 73,,110,,102,,111,,,,,, 36,, 4,,,, 84,,114,, 97,,110,,115,,108,, 97,,116,,105,,111,,110,,,,,,,,176, 4,164,1,,,1,, 83,,116,,114,,105,,110,,103,, 70,,105,,108,,101,, 73,,110,,102,,111,,,,128,1,,,1,, 48,, 48,, 48,, 48,, 48,, 52,, 98,, 48,,,, 44,,2,,1,, 70,,105,,108,,101,, 68,,101,,115,, 99,,114,,105,,112,,116,,105,,111,,110,,,,,, 32,,,, 48,, 8,,1,, 70,,105,,108,,101,, 86,,101,,114,,115,,105,,111,,110,,,,,, 48,, 46,, 48,, 46,, 48,, 46,, 48,,,, 56,,11,,1,, 73,,110,,116,,101,,114,,110,, 97,,108,, 78,, 97,,109,,101,,,,115,, 97,,109,,112,,108,,101,, 46,,101,,120,,101,,,,,, 40,,2,,1,, 76,,101,,103,, 97,,108,, 67,,111,,112,,121,,114,,105,,103,,104,,116,,,, 32,,,, 64,,11,,1,, 79,,114,,105,,103,,105,,110,, 97,,108,, 70,,105,,108,,101,,110,, 97,,109,,101,,,,115,, 97,,109,,112,,108,,101,, 46,,101,,120,,101,,,,,, 52,, 8,,1,, 80,,114,,111,,100,,117,, 99,,116,, 86,,101,,114,,115,,105,,111,,110,,,, 48,, 46,, 48,, 46,, 48,, 46,, 48,,,, 56,, 8,,1,, 65,,115,,115,,101,,109,, 98,,108,,121,, 32,, 86,,101,,114,,115,,105,,111,,110,,,, 48,, 46,, 48,, 46,, 48,, 46,, 48,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 32,,,12,,,, 64, 51];
+	sampleBufSource.length = 3072;
+
+	for (var i = 0; i < sampleBufSource.length; i++) {
+		if (!sampleBufSource[i])
+			sampleBufSource[i] = 0;
+	}
+
+	var global = (function () { return this; })();
+
+	var sampleBuf = sampleBufSource;
+
+	if ("ArrayBuffer" in global) {
+		sampleBuf = new ArrayBuffer(sampleBufSource.length);
+		var dv = new DataView(sampleBuf);
+		for (var i = 0; i < sampleBufSource.length; i++) {
+			dv.setUint8(i, sampleBufSource[i]);
+		}
+	}
+
+</script>
+
+</body>
+</html>

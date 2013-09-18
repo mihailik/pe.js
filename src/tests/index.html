@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>PE.js tests</title>
+	<script src="monoCorlib.js"></script>
+	<script>
+		var htmlConsole = {
+			text: "",
+			log: function (msg) {
+				htmlConsole.text = (htmlConsole.text ? htmlConsole.text + "\n" : "") + msg;
+			}
+		};
+	</script>
+	<script src="tests.js"></script>
+	<script>
+		window.onload = function () {
+			htmlConsoleElement.innerText = htmlConsole.text;
+			htmlConsoleElement.textContent = htmlConsole.text;
+
+			htmlConsole.log = function (msg) {
+				htmlConsole.text += "\n" + msg;
+
+				htmlConsoleElement.innerText = htmlConsole.text;
+				htmlConsoleElement.textContent = htmlConsole.text;
+
+			};
+		}
+	</script>
+	<style>
+		#htmlConsoleElement {
+			font-size: 7pt;
+			font-family: sans-serif;
+		}
+	</style>
+</head>
+<body>
+	<h3>PE.js tests</h3>
+	<hr />
+	<pre id="htmlConsoleElement">1</pre>
+
+</body>
+</html>
