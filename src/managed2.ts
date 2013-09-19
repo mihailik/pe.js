@@ -193,7 +193,9 @@ module pe.managed2 {
 
 			this.populateStrings(this.tableStream.stringIndices, reader);
 
-			return this._createAssemblyFromTables();
+			var result = this._createAssemblyFromTables();
+            result.fileHeaders = this.fileHeaders;
+            return result;
 		}
 
 		private _createAssemblyFromTables() {

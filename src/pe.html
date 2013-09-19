@@ -67,13 +67,13 @@ function init() {
 	delete window.opener.loadedFiles[window.location.hash];
 	window.location.hash = "";
 
-	onFileLoaded(loadFileArgument.file, loadFileArgument.PEFileHeaders, loadFileArgument.reader);
+	onFileLoaded(loadFileArgument.file, loadFileArgument.assembly);
   }
   else {
 	var bufferReader = new pe.io.BufferReader(sampleBuf);
-	var pef = new pe.headers.PEFileHeaders();
-	pef.read(bufferReader);
-	onFileLoaded({name: "sample.exe"}, pef, bufferReader);
+    var appDomain = new pe.managed2.AppDomain();
+    var asm = appDomain.read(bufferReader);
+	onFileLoaded({name: "sample.exe"}, asm);
 	isInitialFileLoaded = true; 
   }
 
@@ -127,9 +127,9 @@ function loadFile(f) {
   pe.io.getFileBufferReader(
 	f,
 	function(reader) {
-	  var pef = new pe.headers.PEFileHeaders();
-	  pef.read(reader);
-	  onFileLoaded(f, pef, reader);
+	  var appDomain = new pe.managed2.AppDomain();
+      var asm = appDomain.read(reader);
+	  onFileLoaded(f, asm);
 	},
 	function(errorGettingReader) {
 	  alert(errorGettingReader);
@@ -138,9 +138,9 @@ function loadFile(f) {
 
 var isInitialFileLoaded = null;
 
-function onFileLoaded(f, pef, reader) {
+function onFileLoaded(f, asm) {
   if (isInitialFileLoaded===null || isInitialFileLoaded===true) {
-	renderPEFileHeaders(f, pef, reader);
+	renderPEFileHeaders(f, asm);
 	isInitialFileLoaded = false;
 	return;
   }
@@ -168,21 +168,21 @@ function onFileLoaded(f, pef, reader) {
 
 	createUrl += "#" + f.name;
 
-	loadedFiles["#" + f.name] = { file: f, PEFileHeaders: pef, reader: reader };
+	loadedFiles["#" + f.name] = { file: f, assembly: asm };
 
 	var newWindow = window.open(createUrl);
   };
 }
 
-function renderPEFileHeaders(f, pef, reader) {
+function renderPEFileHeaders(f, asm) {
 	titleElement.innerText = f.name;
 	titleElement.textContent = f.name;
   
   try {
-	  ko.applyBindings(pef, peDiv);
+	  ko.applyBindings(asm.fileHeaders, peDiv);
 
 	  setTimeout(function () {
-		  parseAndRenderManaged(pef, reader);
+		  parseAndRenderManaged(asm);
 	  }, 100);
   }
   catch(koError) {
@@ -192,41 +192,19 @@ function renderPEFileHeaders(f, pef, reader) {
 
 var asm;
 
-function parseAndRenderManaged(pef, reader) {
-	asm = new pe.managed.AssemblyDefinition();
-	asm.headers = pef;
-	try {
-		asm.read(reader);
-	}
-	catch (asmError) {
-		var errorDetails = asmError + "";
-		if (errorDetails.indexOf(asmError.message)<0)
-			errorDetails = asmError.message;
-
-		alert("Error reading managed metadata: " + errorDetails+"\n\nPlease attach debugger to see the error repeated.");
-
-		// repeat again, for detailed diagnostics
-		reader.offset = 0;
-		asm = new pe.managed.AssemblyDefinition();
-		asm.headers = pef;
-		asm.read(reader);
-	}
-
+function parseAndRenderManaged(asm) {
 	var dump = asm + "\n";
-	for (var iMod = 0; iMod < asm.modules.length; iMod++) {
-		dump += "	" + asm.modules[iMod] + "\n";
 
-		for (var iType = 0; iType < asm.modules[iMod].types.length; iType++) {
-			dump += "		" + asm.modules[iMod].types[iType] + "\n";
+		for (var iType = 0; iType < asm.types.length; iType++) {
+			dump += "		" + asm.types[iType] + "\n";
 
-			for (var iField = 0; iField < asm.modules[iMod].types[iType].fields.length; iField++) {
-				dump += "			" + asm.modules[iMod].types[iType].fields[iField] + "\n";
+			for (var iField = 0; iField < asm.types[iType].fields.length; iField++) {
+				dump += "			" + asm.types[iType].fields[iField] + "\n";
 			}
-			for (var iMethod = 0; iMethod < asm.modules[iMod].types[iType].methods.length; iMethod++) {
-				dump += "			" + asm.modules[iMod].types[iType].methods[iMethod] + "\n";
+			for (var iMethod = 0; iMethod < asm.types[iType].methods.length; iMethod++) {
+				dump += "			" + asm.types[iType].methods[iMethod] + "\n";
 			}
 		}
-	}
 
 	managedDiv.innerText = dump;
 	managedDiv.textContent = dump;

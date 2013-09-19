@@ -5185,7 +5185,9 @@ var pe;
 
                 this.populateStrings(this.tableStream.stringIndices, reader);
 
-                return this._createAssemblyFromTables();
+                var result = this._createAssemblyFromTables();
+                result.fileHeaders = this.fileHeaders;
+                return result;
             };
 
             AssemblyReading.prototype._createAssemblyFromTables = function () {
