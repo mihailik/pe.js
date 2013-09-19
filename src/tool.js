@@ -4,6 +4,7 @@
 var loadedFiles = {};
 
 function init() {
+    loadMscrolib();
     var dragSite = document.getElementById('dragSite');
     dragSite.ondragover = dragSite_dragenter;
     dragSite.ondragenter = dragSite_dragenter;
@@ -195,6 +196,36 @@ function formatBytes(bytes) {
     }
 
     return " " + concatResult.join(" ");
+}
+
+function loadMscrolib() {
+    var mscorlibDllScript = document.getElementById('mscorlib.dll');
+    if (mscorlibDllScript === null)
+        return;
+
+    var base64 = mscorlibDllScript.innerHTML;
+    var textBuf;
+    if (window.atob) {
+        textBuf = atob(base64);
+    } else {
+        var polyfill = 'function() {' + 'var exports = {};' + '(function(){var t="undefined"!=typeof exports?exports:window,' + 'r="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",' + 'o=function(){try{document.createElement("$")}catch(t){return t}}();' + 't.btoa||(t.btoa=function(t){for(var e,n,a=0,c=r,f="";t.charAt(0|a)||' + '(c="=",a%1);f+=c.charAt(63&e>>8-8*(a%1))){if(n=t.charCodeAt(a+=.75),n>255)' + 'throw o;e=e<<8|n}return f}),t.atob||(t.atob=function(t){if(t=t.replace(/=+$/,""),' + '1==t.length%4)throw o;for(var e,n,a=0,c=0,f="";n=t.charAt(c++);~n&&' + '(e=a%4?64*e+n:n,a++%4)?f+=String.fromCharCode(255&e>>(6&-2*a)):0)n=r.indexOf(n);' + 'return f})})();' + 'return exports; }';
+        var atob_ = eval(polyfill).atob;
+        textBuf = atob_(base64);
+    }
+    if ('Uint8Array' in window && 'ArrayBuffer' in window) {
+        var sampleBuf_ = new ArrayBuffer(textBuf.length);
+        var dv = new DataView(sampleBuf_);
+        for (var i = 0; i < textBuf.length; i++) {
+            dv.setUint8(i, textBuf.charCodeAt(i));
+        }
+        window.sampleBuf = sampleBuf_;
+    } else {
+        var buf = [];
+        for (var i = 0; i < textBuf.length; i++) {
+            buf[i] = textBuf.charCodeAt(i);
+        }
+        window.sampleBuf = buf;
+    }
 }
 
 window.onload = init;

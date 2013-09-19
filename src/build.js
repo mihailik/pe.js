@@ -7,6 +7,16 @@ var fs = require('fs');
 var child_process = require('child_process');
 var Inline = require("inline");
 
+ifExists('imports/mono/mscorlib.dll',
+  function() {
+    console.log('Updating base64 mscorlib.dll...');
+    var mscorlibDll = fs.readFileSync('imports/mono/mscorlib.dll');
+    var base64 = mscorlibDll.toString('base64');
+    fs.writeFileSync('mscorlib.js', base64);
+  },
+  function() {
+  });
+
 ifExists(typescriptRepository,
     function typescriptRepositoryPresent() {
         typescriptRepositoryExists = true;
