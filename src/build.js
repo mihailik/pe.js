@@ -18,6 +18,7 @@ ifExists(typescriptRepository,
 
         importLatestTsc('', function() {
             mainPejsCompile();
+            toolCompile();
         });
     },
     function typescriptRepositoryAbsent() {
@@ -55,15 +56,24 @@ function mainPejsCompile() {
         'pe.ts', null,
         function(txt) {
             console.log('pe.js: '+txt);
-            postBuild();
-            console.log('pe.js: inlined');
         },
-        ['--sourcemap'/*, '--comments'*/]);
+        ['--sourcemap','--declaration']);
+}
+
+function toolCompile() {
+    runTypeScriptCompiler(
+        'tool.ts', null,
+        function(txt) {
+            console.log('tool.js: '+txt);
+            postBuild();
+            console.log('tool.js: inlined');
+        },
+        ['--sourcemap']);
 }
 
 function postBuild() {
-    fs.createReadStream('pe.html').pipe(
-      new Inline("pe.html", {
+    fs.createReadStream('tool.html').pipe(
+      new Inline("tool.html", {
         //default options:
         images: true, //inline images
         scripts: true, //inline scripts
@@ -175,7 +185,6 @@ function runTypeScriptCompiler(src, out, onchanged, more) {
                 (statAfter?'changed':'deleted') :
                 (statAfter?'created':'does not exist');
             changedText = scriptFileName+' '+changedText;
-            
             changeQueued = setTimeout(function() {
                 fs.exists(scriptFileName+'.js', function(exists) {
                     if (exists)
