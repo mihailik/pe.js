@@ -18,7 +18,6 @@ ifExists(typescriptRepository,
 
         importLatestTsc('', function() {
             mainPejsCompile();
-            toolCompile();
         });
     },
     function typescriptRepositoryAbsent() {
@@ -51,11 +50,16 @@ ifExists(codemirrorRepository,
         }
     });
 
+var firstMainCompile = true;
 function mainPejsCompile() {
     runTypeScriptCompiler(
         'pe.ts', null,
         function(txt) {
             console.log('pe.js: '+txt);
+            if (firstMainCompile) {
+                firstMainCompile = false;
+                toolCompile();
+            }
         },
         ['--sourcemap','--declaration']);
 }
