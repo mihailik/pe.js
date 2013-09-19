@@ -147,8 +147,8 @@ function onFileLoaded(f, asm) {
 
   var newLinkToOpen = document.createElement("a");
   newLinkToOpen.href = "#";
-  newLinkToOpen.innerText = f.name + " " + pef;
-  newLinkToOpen.textContet = f.name + " " + pef;
+  newLinkToOpen.innerText = f.name + " " + asm;
+  newLinkToOpen.textContent = f.name + " " + asm;
   linksToOpen.appendChild(newLinkToOpen);
   var emptySpace = document.createElement("span");
   emptySpace.innerText = " ";

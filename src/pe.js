@@ -5181,6 +5181,7 @@ var pe;
                 this.readClrDirectory();
                 this.readClrMetadata();
                 this.readMetadataStreams();
+                reader.setVirtualOffset(this.metadataStreams.tables.address);
                 this.readTableStream();
 
                 this.populateStrings(this.tableStream.stringIndices, reader);
