@@ -1215,6 +1215,7 @@ declare module pe.managed2 {
         public attributes: metadata.FieldAttributes;
         public name: string;
         public fieldType: TypeReference;
+        public toString(): string;
     }
     class PropertyInfo {
         public name: string;

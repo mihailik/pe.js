@@ -153,6 +153,9 @@ module pe.managed2 {
 		attributes: metadata.FieldAttributes = 0;
 		name: string = "";
 		fieldType: TypeReference = null;
+        toString() {
+          return this.name + (this.fieldType ? ": "+this.fieldType : "");
+        }
 	}
 
 	export class PropertyInfo {
@@ -201,14 +204,17 @@ module pe.managed2 {
 
 		private _createAssemblyFromTables() {
 			var stringIndices = this.tableStream.stringIndices;
-
+          
 			var assemblyTable = this.tableStream.tables[0x20]; // Assembly
 			if (!assemblyTable || !assemblyTable.length)
 				return;
 
 			var assemblyRow: tables.Assembly = assemblyTable[0];
 
+            var moduleTable = this.tableStream.tables[0x00]; // Module
 			var typeDefTable = this.tableStream.tables[0x02]; // TypeDef
+            var fieldTable = this.tableStream.tables[0x04]; // Field
+            var methodDefTable = this.tableStream.tables[0x06]; // MethodDef
 
 			var assembly = this._getMscorlibIfThisShouldBeOne();
 
@@ -223,6 +229,21 @@ module pe.managed2 {
 			assembly.publicKey = this._readBlobHex(assemblyRow.publicKey);
 			assembly.culture = stringIndices[assemblyRow.culture];
 
+            moduleTable[0].def = assembly;
+          
+            var tcReader = new TableCompletionReader(this.tableStream, this.metadataStreams);
+
+            for (var i = 0; i < this.tableStream.tables.length; i++) {
+              var tab = this.tableStream.tables[i];
+              if (tab) {
+                if (tab && tab.length && tab[0].complete) {
+                  for (var j = 0; j < tab.length; j++) {
+                    tab[j].complete(tcReader);
+                  }
+                }
+              }
+            }
+          
 			var referencedAssemblies: Assembly[] = [];
 			var assemblyRefTable: tables.AssemblyRef[] = this.tableStream.tables[0x23];  // AssemblyRef
 			if (assemblyRefTable) {
@@ -275,6 +296,18 @@ module pe.managed2 {
 
 					assembly.types.push(type);
 				}
+              
+                var nextTypeDefRow = i+1 < typeDefTable.length ?
+                  <tables.TypeDef>typeDefTable[i+1] :
+                  null;
+              
+                var firstField = typeDefRow.fieldList -1;
+                var lastField = nextTypeDefRow ?
+                    nextTypeDefRow.fieldList -1 :
+                    this.tableStream.allFields.length;
+                for (var iField = firstField; iField < lastField; iField++) {
+                  type.fields.push(this.tableStream.allFields[iField]);
+                }
 
 				type.isSpeculative = false;
 			}
@@ -639,6 +672,7 @@ module pe.managed2 {
 
 			var tReader = new TableReader(reader, this.tables, stringCount, guidCount, blobCount);
 			this._readTableRows(tableCounts, tableTypes, tReader);
+
 			this.stringIndices = tReader.stringIndices;
 		}
 
@@ -673,9 +707,10 @@ module pe.managed2 {
 			this._populateTableObjects(this.allMethods, MethodInfo, tableCounts[0x06]); // MethodDef
 		}
 
-		private _populateTableObjects(table: any[], Ctor: any, count: number) {
+		private _populateTableObjects(table: any[], Ctor: any, count: number, apiTable?) {
 			for (var i = 0; i < count; i++) {
-				table.push(new Ctor());
+                var obj = apiTable ? new Ctor(apiTable[i]) : new Ctor();
+				table.push(obj);
 			}
 		}
 
@@ -704,7 +739,15 @@ module pe.managed2 {
 					continue;
 				}
 
-				this._populateTableObjects(table, TableType, tableCounts[i]);
+                var apiTable;
+                if (TableType === tables.TypeDef)
+                  apiTable = this.allTypes;
+                else if (TableType === tables.Field)
+                  apiTable = this.allFields;
+                else if (TableType === tables.MethodDef)
+                  apiTable = this.allMethods;
+
+				this._populateTableObjects(table, TableType, tableCounts[i], apiTable);
 			}
 		}
 
@@ -932,6 +975,8 @@ module pe.managed2 {
 
 	class TableCompletionReader {
 		constructor(private _tableStream: TableStream, private _metadataStreams: MetadataStreams) {
+			this.lookupResolutionScope = this._createLookup(TableReader.resolutionScopeTables);
+			this.lookupTypeDefOrRef = this._createLookup(TableReader.typeDefOrRefTables);
 		}
 
 		readString(index: number): string {
@@ -964,9 +1009,6 @@ module pe.managed2 {
 				var methodRow = table[i];
 				methods.push(methodRow.def);
 			}
-
-			this.lookupResolutionScope = this._createLookup(TableReader.resolutionScopeTables);
-			this.lookupTypeDefOrRef = this._createLookup(TableReader.typeDefOrRefTables);
 		}
 
 		lookupResolutionScope: (codedIndex: number) => any;
@@ -974,17 +1016,17 @@ module pe.managed2 {
 		lookupTypeDefOrRef: (codedIndex: number) => TypeReference;
 
 		private _createLookup(tables: number[]): (codedIndex: number) => any {
-			var tableKindBitCount = calcRequredBitCount(tables.length);
+            var tableKindBitCount = calcRequredBitCount(tables.length);
 			
 			return (codedIndex: number) => {
 				var rowIndex = codedIndex >> tableKindBitCount;
 				if (rowIndex === 0)
 					return null;
 
-				var tableKind = codedIndex - (rowIndex << tableKindBitCount);
+				var tableKind = tables[codedIndex - (rowIndex << tableKindBitCount)];
 
 				var table: any[] = this._tableStream.tables[tableKind];
-				var row = table[rowIndex];
+				var row = table[rowIndex-1];
 
 				var result = row.def;
 
@@ -1082,7 +1124,7 @@ module pe.managed2 {
 		// ECMA-335 II.22.37
 		export class TypeDef {
 			TableKind = 0x02;
-			def = new Type();
+            constructor(public def: Type) { }
 
 			flags: metadata.TypeAttributes = 0;
 			name: number = 0;
@@ -1122,7 +1164,7 @@ module pe.managed2 {
 		// ECMA-335 II.22.15
 		export class Field {
 			TableKind = 0x04;
-			def = new FieldInfo();
+            constructor(public def: FieldInfo) { }
 
 			attributes: number = 0;
 			name: number = 0;
@@ -1144,7 +1186,7 @@ module pe.managed2 {
 		//ECMA-335 II.22.26
 		export class MethodDef {
 			TableKind = 0x06;
-			def = new MethodInfo();
+            constructor(public def: MethodInfo) { }
 
 			rva: number = 0;
 			implAttributes: metadata.MethodImplAttributes = 0;

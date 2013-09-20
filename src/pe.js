@@ -5132,6 +5132,9 @@ var pe;
                 this.name = "";
                 this.fieldType = null;
             }
+            FieldInfo.prototype.toString = function () {
+                return this.name + (this.fieldType ? ": " + this.fieldType : "");
+            };
             return FieldInfo;
         })();
         managed2.FieldInfo = FieldInfo;
@@ -5200,7 +5203,10 @@ var pe;
 
                 var assemblyRow = assemblyTable[0];
 
+                var moduleTable = this.tableStream.tables[0x00];
                 var typeDefTable = this.tableStream.tables[0x02];
+                var fieldTable = this.tableStream.tables[0x04];
+                var methodDefTable = this.tableStream.tables[0x06];
 
                 var assembly = this._getMscorlibIfThisShouldBeOne();
 
@@ -5214,6 +5220,21 @@ var pe;
                 assembly.attributes = assemblyRow.flags;
                 assembly.publicKey = this._readBlobHex(assemblyRow.publicKey);
                 assembly.culture = stringIndices[assemblyRow.culture];
+
+                moduleTable[0].def = assembly;
+
+                var tcReader = new TableCompletionReader(this.tableStream, this.metadataStreams);
+
+                for (var i = 0; i < this.tableStream.tables.length; i++) {
+                    var tab = this.tableStream.tables[i];
+                    if (tab) {
+                        if (tab && tab.length && tab[0].complete) {
+                            for (var j = 0; j < tab.length; j++) {
+                                tab[j].complete(tcReader);
+                            }
+                        }
+                    }
+                }
 
                 var referencedAssemblies = [];
                 var assemblyRefTable = this.tableStream.tables[0x23];
@@ -5258,6 +5279,14 @@ var pe;
                         type = new Type(null, assembly, typeNamespace, typeName);
 
                         assembly.types.push(type);
+                    }
+
+                    var nextTypeDefRow = i + 1 < typeDefTable.length ? typeDefTable[i + 1] : null;
+
+                    var firstField = typeDefRow.fieldList - 1;
+                    var lastField = nextTypeDefRow ? nextTypeDefRow.fieldList - 1 : this.tableStream.allFields.length;
+                    for (var iField = firstField; iField < lastField; iField++) {
+                        type.fields.push(this.tableStream.allFields[iField]);
                     }
 
                     type.isSpeculative = false;
@@ -5592,6 +5621,7 @@ var pe;
 
                 var tReader = new TableReader(reader, this.tables, stringCount, guidCount, blobCount);
                 this._readTableRows(tableCounts, tableTypes, tReader);
+
                 this.stringIndices = tReader.stringIndices;
             };
 
@@ -5626,9 +5656,10 @@ var pe;
                 this._populateTableObjects(this.allMethods, MethodInfo, tableCounts[0x06]);
             };
 
-            TableStream.prototype._populateTableObjects = function (table, Ctor, count) {
+            TableStream.prototype._populateTableObjects = function (table, Ctor, count, apiTable) {
                 for (var i = 0; i < count; i++) {
-                    table.push(new Ctor());
+                    var obj = apiTable ? new Ctor(apiTable[i]) : new Ctor();
+                    table.push(obj);
                 }
             };
 
@@ -5657,7 +5688,15 @@ var pe;
                         continue;
                     }
 
-                    this._populateTableObjects(table, TableType, tableCounts[i]);
+                    var apiTable;
+                    if (TableType === tables.TypeDef)
+                        apiTable = this.allTypes;
+                    else if (TableType === tables.Field)
+                        apiTable = this.allFields;
+                    else if (TableType === tables.MethodDef)
+                        apiTable = this.allMethods;
+
+                    this._populateTableObjects(table, TableType, tableCounts[i], apiTable);
                 }
             };
 
@@ -5862,6 +5901,8 @@ var pe;
             function TableCompletionReader(_tableStream, _metadataStreams) {
                 this._tableStream = _tableStream;
                 this._metadataStreams = _metadataStreams;
+                this.lookupResolutionScope = this._createLookup(TableReader.resolutionScopeTables);
+                this.lookupTypeDefOrRef = this._createLookup(TableReader.typeDefOrRefTables);
             }
             TableCompletionReader.prototype.readString = function (index) {
                 return this._tableStream.stringIndices[index];
@@ -5893,9 +5934,6 @@ var pe;
                     var methodRow = table[i];
                     methods.push(methodRow.def);
                 }
-
-                this.lookupResolutionScope = this._createLookup(TableReader.resolutionScopeTables);
-                this.lookupTypeDefOrRef = this._createLookup(TableReader.typeDefOrRefTables);
             };
 
             TableCompletionReader.prototype._createLookup = function (tables) {
@@ -5907,10 +5945,10 @@ var pe;
                     if (rowIndex === 0)
                         return null;
 
-                    var tableKind = codedIndex - (rowIndex << tableKindBitCount);
+                    var tableKind = tables[codedIndex - (rowIndex << tableKindBitCount)];
 
                     var table = _this._tableStream.tables[tableKind];
-                    var row = table[rowIndex];
+                    var row = table[rowIndex - 1];
 
                     var result = row.def;
 
@@ -6010,9 +6048,9 @@ var pe;
 
             // ECMA-335 II.22.37
             var TypeDef = (function () {
-                function TypeDef() {
+                function TypeDef(def) {
+                    this.def = def;
                     this.TableKind = 0x02;
-                    this.def = new managed2.Type();
                     this.flags = 0;
                     this.name = 0;
                     this.namespace = 0;
@@ -6052,9 +6090,9 @@ var pe;
 
             // ECMA-335 II.22.15
             var Field = (function () {
-                function Field() {
+                function Field(def) {
+                    this.def = def;
                     this.TableKind = 0x04;
-                    this.def = new managed2.FieldInfo();
                     this.attributes = 0;
                     this.name = 0;
                     this.signature = 0;
@@ -6076,9 +6114,9 @@ var pe;
 
             //ECMA-335 II.22.26
             var MethodDef = (function () {
-                function MethodDef() {
+                function MethodDef(def) {
+                    this.def = def;
                     this.TableKind = 0x06;
-                    this.def = new managed2.MethodInfo();
                     this.rva = 0;
                     this.implAttributes = 0;
                     this.attributes = 0;

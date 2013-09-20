@@ -5,6 +5,11 @@ declare var sampleBuf: Uint8Array;
 var loadedFiles = {};
 
 function init() {
+  initCore();
+  var totalLoadTime = Date.now() - (<any>window).startPageLoading;
+  document.title += ' ' + (totalLoadTime/1000)+' sec.';
+  
+function initCore() {
   loadMscrolib();
   var dragSite = document.getElementById('dragSite');
   dragSite.ondragover = dragSite_dragenter;
@@ -36,6 +41,7 @@ function init() {
 
 	  handleDrop((<any>evt.target).files);
   };
+}
 }
 
 function dragSite_dragenter(e) {

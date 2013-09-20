@@ -4,36 +4,42 @@
 var loadedFiles = {};
 
 function init() {
-    loadMscrolib();
-    var dragSite = document.getElementById('dragSite');
-    dragSite.ondragover = dragSite_dragenter;
-    dragSite.ondragenter = dragSite_dragenter;
-    dragSite.ondragleave = dragSite_dragleave;
-    dragSite.ondrop = dragSite_drop;
+    initCore();
+    var totalLoadTime = Date.now() - window.startPageLoading;
+    document.title += ' ' + (totalLoadTime / 1000) + ' sec.';
 
-    if (window.opener && window.location.hash) {
-        var loadFileArgument = window.opener.loadedFiles[window.location.hash];
-        delete window.opener.loadedFiles[window.location.hash];
-        window.location.hash = "";
+    function initCore() {
+        loadMscrolib();
+        var dragSite = document.getElementById('dragSite');
+        dragSite.ondragover = dragSite_dragenter;
+        dragSite.ondragenter = dragSite_dragenter;
+        dragSite.ondragleave = dragSite_dragleave;
+        dragSite.ondrop = dragSite_drop;
 
-        onFileLoaded(loadFileArgument.file, loadFileArgument.assembly);
-    } else {
-        var bufferReader = new pe.io.BufferReader(sampleBuf);
-        var appDomain = new pe.managed2.AppDomain();
-        var asm = appDomain.read(bufferReader);
-        onFileLoaded({ name: "sample.exe" }, asm);
-        isInitialFileLoaded = true;
-    }
+        if (window.opener && window.location.hash) {
+            var loadFileArgument = window.opener.loadedFiles[window.location.hash];
+            delete window.opener.loadedFiles[window.location.hash];
+            window.location.hash = "";
 
-    var loadInput = document.getElementById('loadInput');
-    loadInput.onchange = function (evt) {
-        if (!evt || !evt.target || !evt.target.files) {
-            alert("File API is not supported by the browser.");
-            return;
+            onFileLoaded(loadFileArgument.file, loadFileArgument.assembly);
+        } else {
+            var bufferReader = new pe.io.BufferReader(sampleBuf);
+            var appDomain = new pe.managed2.AppDomain();
+            var asm = appDomain.read(bufferReader);
+            onFileLoaded({ name: "sample.exe" }, asm);
+            isInitialFileLoaded = true;
         }
 
-        handleDrop(evt.target.files);
-    };
+        var loadInput = document.getElementById('loadInput');
+        loadInput.onchange = function (evt) {
+            if (!evt || !evt.target || !evt.target.files) {
+                alert("File API is not supported by the browser.");
+                return;
+            }
+
+            handleDrop(evt.target.files);
+        };
+    }
 }
 
 function dragSite_dragenter(e) {
