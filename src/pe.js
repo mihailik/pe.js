@@ -4998,10 +4998,19 @@ var pe;
     /// <reference path="io.ts" />
     /// <reference path="headers.ts" />
     (function (managed2) {
+        /**
+        * Global environment context for loading assemblies.
+        * Avoids singletons.
+        */
         var AppDomain = (function () {
             function AppDomain() {
                 this.assemblies = [];
+                /**
+                * There always have to be mscorlib.
+                * It has to exist for many things to work correctly. If one gets loaded later, it will assume the already created identity.
+                */
                 this.mscorlib = new Assembly();
+                // creating a dummy mscorlib, including dummy predefined types
                 this.mscorlib.name = "mscorlib";
 
                 var objectType = new Type(null, this.mscorlib, "System", "Object");
@@ -5012,6 +5021,9 @@ var pe;
 
                 this.assemblies.push(this.mscorlib);
             }
+            /**
+            * Read assembly in AppDomain from a binary stream.
+            */
             AppDomain.prototype.read = function (reader) {
                 var context = new AssemblyReading(this);
                 var result = context.read(reader);
@@ -5019,6 +5031,10 @@ var pe;
                 return result;
             };
 
+            /**
+            * Resolve assembly from already loaded ones.
+            * If none exist, create a dummy one and return.
+            */
             AppDomain.prototype.resolveAssembly = function (name, version, publicKey, culture) {
                 var asm;
                 for (var i = 0; i < this.assemblies.length; i++) {
@@ -5049,6 +5065,11 @@ var pe;
                 this.publicKey = null;
                 this.culture = null;
                 this.attributes = 0;
+                /**
+                * Assemblies may be created speculatively to represent referenced, but not loaded assemblies.
+                * The most common case is mscorlib, which almost always needs to exist, but not necessarily will be loaded first.
+                * A speculatively-created assembly can get their true content populated later, if it's loaded properly.
+                */
                 this.isSpeculative = true;
                 this.runtimeVersion = "";
                 this.specificRuntimeVersion = "";
@@ -5061,21 +5082,35 @@ var pe;
                 this.encId = "";
                 this.encBaseId = "";
                 this.types = [];
+                this.referencedAssemblies = [];
                 this.customAttributes = [];
             }
             Assembly.prototype.toString = function () {
+                // emulate .NET assembly name format
                 return this.name + ", Version=" + this.version + ", Culture=" + (this.culture ? this.culture : "neutral") + ", PublicKeyToken=" + (this.publicKey && this.publicKey.length ? this.publicKey : "null");
             };
             return Assembly;
         })();
         managed2.Assembly = Assembly;
 
+        
+
+        /**
+        * Represents actual types, as well as referenced types from external libraries that aren't loaded
+        * (in which case isSpeculative property is set to true).
+        */
         var Type = (function () {
             function Type(baseType, assembly, namespace, name) {
                 this.baseType = baseType;
                 this.assembly = assembly;
                 this.namespace = namespace;
                 this.name = name;
+                /** If an assembly is loaded, and a type from another assembly is required,
+                * but that external assembly is not loaded yet,
+                * that assembly and required types in it is created speculatively.
+                * IF at any point later that assembly is loaded, it will populate an existing speculative assembly
+                * and speculative types, rather than creating new distinct instances.
+                */
                 this.isSpeculative = true;
                 this.attributes = 0;
                 this.fields = [];
@@ -5115,6 +5150,8 @@ var pe;
             ConstructedGenericType.prototype.getAssembly = function () {
                 return this.genericType.getAssembly();
             };
+
+            // this one is actually implemented a bit simpler than in the CLR
             ConstructedGenericType.prototype.getFullName = function () {
                 return this.genericType.getFullName() + "[" + this.genericArguments.join(",") + "]";
             };
@@ -5141,7 +5178,10 @@ var pe;
 
         var PropertyInfo = (function () {
             function PropertyInfo() {
+                this.name = '';
                 this.propertyType = null;
+                this.getAccessor = null;
+                this.setAccessor = null;
             }
             return PropertyInfo;
         })();
@@ -5149,6 +5189,7 @@ var pe;
 
         var MethodInfo = (function () {
             function MethodInfo() {
+                this.name = '';
             }
             return MethodInfo;
         })();
@@ -5156,6 +5197,8 @@ var pe;
 
         var ParameterInfo = (function () {
             function ParameterInfo() {
+                this.name = '';
+                this.parameterType = null;
             }
             return ParameterInfo;
         })();
@@ -5163,31 +5206,29 @@ var pe;
 
         var EventInfo = (function () {
             function EventInfo() {
+                this.addHandler = null;
+                this.removeHandler = null;
             }
             return EventInfo;
         })();
         managed2.EventInfo = EventInfo;
 
+        /**
+        * State needed to process assembly loading.
+        */
         var AssemblyReading = (function () {
             function AssemblyReading(appDomain) {
                 this.appDomain = appDomain;
                 this.reader = null;
                 this.fileHeaders = null;
-                this.clrDirectory = null;
-                this.clrMetadata = null;
-                this.metadataStreams = null;
-                this.tableStream = null;
+                this.managedHeaders = null;
             }
             AssemblyReading.prototype.read = function (reader) {
                 this.reader = reader;
-                this.readFileHeaders();
-                this.readClrDirectory();
-                this.readClrMetadata();
-                this.readMetadataStreams();
-                reader.setVirtualOffset(this.metadataStreams.tables.address);
-                this.readTableStream();
 
-                this.populateStrings(this.tableStream.stringIndices, reader);
+                this.readFileHeaders();
+
+                this.readManagedHeaders();
 
                 var result = this._createAssemblyFromTables();
                 result.fileHeaders = this.fileHeaders;
@@ -5195,18 +5236,18 @@ var pe;
             };
 
             AssemblyReading.prototype._createAssemblyFromTables = function () {
-                var stringIndices = this.tableStream.stringIndices;
+                var stringIndices = this.managedHeaders.tableStream.stringIndices;
 
-                var assemblyTable = this.tableStream.tables[0x20];
+                var assemblyTable = this.managedHeaders.tableStream.tables[0x20];
                 if (!assemblyTable || !assemblyTable.length)
                     return;
 
                 var assemblyRow = assemblyTable[0];
 
-                var moduleTable = this.tableStream.tables[0x00];
-                var typeDefTable = this.tableStream.tables[0x02];
-                var fieldTable = this.tableStream.tables[0x04];
-                var methodDefTable = this.tableStream.tables[0x06];
+                var moduleTable = this.managedHeaders.tableStream.tables[0x00];
+                var typeDefTable = this.managedHeaders.tableStream.tables[0x02];
+                var fieldTable = this.managedHeaders.tableStream.tables[0x04];
+                var methodDefTable = this.managedHeaders.tableStream.tables[0x06];
 
                 var assembly = this._getMscorlibIfThisShouldBeOne();
 
@@ -5223,10 +5264,10 @@ var pe;
 
                 moduleTable[0].def = assembly;
 
-                var tcReader = new TableCompletionReader(this.tableStream, this.metadataStreams);
+                var tcReader = new TableCompletionReader(this.managedHeaders.tableStream, this.managedHeaders.metadataStreams);
 
-                for (var i = 0; i < this.tableStream.tables.length; i++) {
-                    var tab = this.tableStream.tables[i];
+                for (var i = 0; i < this.managedHeaders.tableStream.tables.length; i++) {
+                    var tab = this.managedHeaders.tableStream.tables[i];
                     if (tab) {
                         if (tab && tab.length && tab[0].complete) {
                             for (var j = 0; j < tab.length; j++) {
@@ -5236,8 +5277,7 @@ var pe;
                     }
                 }
 
-                var referencedAssemblies = [];
-                var assemblyRefTable = this.tableStream.tables[0x23];
+                var assemblyRefTable = this.managedHeaders.tableStream.tables[0x23];
                 if (assemblyRefTable) {
                     for (var i = 0; i < assemblyRefTable.length; i++) {
                         var assemblyRefRow = assemblyRefTable[i];
@@ -5253,7 +5293,7 @@ var pe;
                         if (referencedAssembly.isSpeculative)
                             referencedAssembly.attributes = assemblyRefAttributes;
 
-                        referencedAssemblies.push(referencedAssembly);
+                        assembly.referencedAssemblies.push(referencedAssembly);
                     }
                 }
 
@@ -5284,9 +5324,9 @@ var pe;
                     var nextTypeDefRow = i + 1 < typeDefTable.length ? typeDefTable[i + 1] : null;
 
                     var firstField = typeDefRow.fieldList - 1;
-                    var lastField = nextTypeDefRow ? nextTypeDefRow.fieldList - 1 : this.tableStream.allFields.length;
+                    var lastField = nextTypeDefRow ? nextTypeDefRow.fieldList - 1 : this.managedHeaders.tableStream.allFields.length;
                     for (var iField = firstField; iField < lastField; iField++) {
-                        type.fields.push(this.tableStream.allFields[iField]);
+                        type.fields.push(this.managedHeaders.tableStream.allFields[iField]);
                     }
 
                     type.isSpeculative = false;
@@ -5298,9 +5338,9 @@ var pe;
             };
 
             AssemblyReading.prototype._getMscorlibIfThisShouldBeOne = function () {
-                var stringIndices = this.tableStream.stringIndices;
+                var stringIndices = this.managedHeaders.tableStream.stringIndices;
 
-                var assemblyTable = this.tableStream.tables[0x20];
+                var assemblyTable = this.managedHeaders.tableStream.tables[0x20];
                 if (!assemblyTable || !assemblyTable.length)
                     return null;
 
@@ -5312,7 +5352,7 @@ var pe;
                 if (!this.appDomain.assemblies[0].isSpeculative)
                     return null;
 
-                var typeDefTable = this.tableStream.tables[0x02];
+                var typeDefTable = this.managedHeaders.tableStream.tables[0x02];
                 if (!typeDefTable)
                     return null;
 
@@ -5343,7 +5383,7 @@ var pe;
             AssemblyReading.prototype._readBlobHex = function (blobIndex) {
                 var saveOffset = this.reader.offset;
 
-                this.reader.setVirtualOffset(this.metadataStreams.blobs.address + blobIndex);
+                this.reader.setVirtualOffset(this.managedHeaders.metadataStreams.blobs.address + blobIndex);
                 var length = this._readBlobSize();
 
                 var result = "";
@@ -5386,29 +5426,40 @@ var pe;
                 this.reader.sections = this.fileHeaders.sectionHeaders;
             };
 
+            AssemblyReading.prototype.readManagedHeaders = function () {
+                this.managedHeaders = new ManagedHeaders();
+
+                this.readClrDirectory();
+                this.readClrMetadata();
+                this.readMetadataStreams();
+
+                this.readTableStream();
+
+                this.populateStrings(this.managedHeaders.tableStream.stringIndices, this.reader);
+            };
+
             AssemblyReading.prototype.readClrDirectory = function () {
                 var clrDataDirectory = this.fileHeaders.optionalHeader.dataDirectories[pe.headers.DataDirectoryKind.Clr];
 
                 this.reader.setVirtualOffset(clrDataDirectory.address);
-                this.clrDirectory = new ClrDirectory();
-                this.clrDirectory.read(this.reader);
+
+                this.managedHeaders.clrDirectory.read(this.reader);
             };
 
             AssemblyReading.prototype.readClrMetadata = function () {
-                this.reader.setVirtualOffset(this.clrDirectory.metadataDir.address);
+                this.reader.setVirtualOffset(this.managedHeaders.clrDirectory.metadataDir.address);
 
-                this.clrMetadata = new ClrMetadata();
-                this.clrMetadata.read(this.reader);
+                this.managedHeaders.clrMetadata.read(this.reader);
             };
 
             AssemblyReading.prototype.readMetadataStreams = function () {
-                this.metadataStreams = new MetadataStreams();
-                this.metadataStreams.read(this.clrDirectory.metadataDir.address, this.clrMetadata.streamCount, this.reader);
+                this.managedHeaders.metadataStreams.read(this.managedHeaders.clrDirectory.metadataDir.address, this.managedHeaders.clrMetadata.streamCount, this.reader);
             };
 
             AssemblyReading.prototype.readTableStream = function () {
-                this.tableStream = new TableStream();
-                this.tableStream.read(this.reader, this.metadataStreams.strings.size, this.metadataStreams.guids.length, this.metadataStreams.blobs.size);
+                this.reader.setVirtualOffset(this.managedHeaders.metadataStreams.tables.address);
+
+                this.managedHeaders.tableStream.read(this.reader, this.managedHeaders.metadataStreams.strings.size, this.managedHeaders.metadataStreams.guids.length, this.managedHeaders.metadataStreams.blobs.size);
             };
 
             AssemblyReading.prototype.populateStrings = function (stringIndices, reader) {
@@ -5418,13 +5469,24 @@ var pe;
                 for (var i in stringIndices) {
                     if (i > 0) {
                         var iNum = Number(i);
-                        reader.setVirtualOffset(this.metadataStreams.strings.address + iNum);
+                        reader.setVirtualOffset(this.managedHeaders.metadataStreams.strings.address + iNum);
                         stringIndices[iNum] = reader.readUtf8Z(1024 * 1024 * 1024);
                     }
                 }
             };
             return AssemblyReading;
         })();
+
+        var ManagedHeaders = (function () {
+            function ManagedHeaders() {
+                this.clrDirectory = null;
+                this.clrMetadata = null;
+                this.metadataStreams = null;
+                this.tableStream = null;
+            }
+            return ManagedHeaders;
+        })();
+        managed2.ManagedHeaders = ManagedHeaders;
 
         var ClrDirectory = (function () {
             function ClrDirectory() {
@@ -5474,6 +5536,7 @@ var pe;
             ClrDirectory._clrHeaderSize = 72;
             return ClrDirectory;
         })();
+        managed2.ClrDirectory = ClrDirectory;
 
         var ClrMetadata = (function () {
             function ClrMetadata() {
@@ -5502,6 +5565,7 @@ var pe;
             };
             return ClrMetadata;
         })();
+        managed2.ClrMetadata = ClrMetadata;
 
         var MetadataStreams = (function () {
             function MetadataStreams() {
@@ -5585,6 +5649,7 @@ var pe;
             };
             return MetadataStreams;
         })();
+        managed2.MetadataStreams = MetadataStreams;
 
         var TableStream = (function () {
             function TableStream() {
@@ -5712,6 +5777,7 @@ var pe;
             };
             return TableStream;
         })();
+        managed2.TableStream = TableStream;
 
         function calcRequredBitCount(maxValue) {
             var bitMask = maxValue;

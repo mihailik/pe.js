@@ -1150,11 +1150,26 @@ declare module pe.managed {
     }
 }
 declare module pe.managed2 {
+    /**
+    * Global environment context for loading assemblies.
+    * Avoids singletons.
+    */
     class AppDomain {
         public assemblies: Assembly[];
+        /**
+        * There always have to be mscorlib.
+        * It has to exist for many things to work correctly. If one gets loaded later, it will assume the already created identity.
+        */
         public mscorlib: Assembly;
         constructor();
+        /**
+        * Read assembly in AppDomain from a binary stream.
+        */
         public read(reader: pe.io.BufferReader): Assembly;
+        /**
+        * Resolve assembly from already loaded ones.
+        * If none exist, create a dummy one and return.
+        */
         public resolveAssembly(name: string, version: string, publicKey: string, culture: string): Assembly;
     }
     class Assembly {
@@ -1164,6 +1179,11 @@ declare module pe.managed2 {
         public publicKey: string;
         public culture: string;
         public attributes: metadata.AssemblyFlags;
+        /**
+        * Assemblies may be created speculatively to represent referenced, but not loaded assemblies.
+        * The most common case is mscorlib, which almost always needs to exist, but not necessarily will be loaded first.
+        * A speculatively-created assembly can get their true content populated later, if it's loaded properly.
+        */
         public isSpeculative: boolean;
         public runtimeVersion: string;
         public specificRuntimeVersion: string;
@@ -1176,14 +1196,33 @@ declare module pe.managed2 {
         public encId: string;
         public encBaseId: string;
         public types: Type[];
+        public referencedAssemblies: Assembly[];
         public customAttributes: any[];
         public toString(): string;
     }
+    /**
+    * Implemented by Type, ConstructedGenericType.
+    */
+    interface TypeReference {
+        getBaseType(): TypeReference;
+        getAssembly(): Assembly;
+        getFullName(): string;
+    }
+    /**
+    * Represents actual types, as well as referenced types from external libraries that aren't loaded
+    * (in which case isSpeculative property is set to true).
+    */
     class Type implements TypeReference {
         public baseType: TypeReference;
         public assembly: Assembly;
         public namespace: string;
         public name: string;
+        /** If an assembly is loaded, and a type from another assembly is required,
+        * but that external assembly is not loaded yet,
+        * that assembly and required types in it is created speculatively.
+        * IF at any point later that assembly is loaded, it will populate an existing speculative assembly
+        * and speculative types, rather than creating new distinct instances.
+        */
         public isSpeculative: boolean;
         public attributes: metadata.TypeAttributes;
         public fields: FieldInfo[];
@@ -1196,11 +1235,6 @@ declare module pe.managed2 {
         public getAssembly(): Assembly;
         public getFullName(): string;
         public toString(): string;
-    }
-    interface TypeReference {
-        getBaseType(): TypeReference;
-        getAssembly(): Assembly;
-        getFullName(): string;
     }
     class ConstructedGenericType implements TypeReference {
         public genericType: TypeReference;
@@ -1220,15 +1254,78 @@ declare module pe.managed2 {
     class PropertyInfo {
         public name: string;
         public propertyType: TypeReference;
+        public getAccessor: MethodInfo;
+        public setAccessor: MethodInfo;
     }
     class MethodInfo {
         public name: string;
     }
     class ParameterInfo {
         public name: string;
+        public parameterType: TypeReference;
     }
     class EventInfo {
         public name: string;
+        public addHandler: MethodInfo;
+        public removeHandler: MethodInfo;
+    }
+    class ManagedHeaders {
+        public clrDirectory: ClrDirectory;
+        public clrMetadata: ClrMetadata;
+        public metadataStreams: MetadataStreams;
+        public tableStream: TableStream;
+    }
+    class ClrDirectory {
+        private static _clrHeaderSize;
+        public cb: number;
+        public runtimeVersion: string;
+        public imageFlags: metadata.ClrImageFlags;
+        public metadataDir: pe.io.AddressRange;
+        public entryPointToken: number;
+        public resourcesDir: pe.io.AddressRange;
+        public strongNameSignatureDir: pe.io.AddressRange;
+        public codeManagerTableDir: pe.io.AddressRange;
+        public vtableFixupsDir: pe.io.AddressRange;
+        public exportAddressTableJumpsDir: pe.io.AddressRange;
+        public managedNativeHeaderDir: pe.io.AddressRange;
+        public read(readerAtClrDataDirectory: pe.io.BufferReader): void;
+    }
+    class ClrMetadata {
+        public mdSignature: metadata.ClrMetadataSignature;
+        public metadataVersion: string;
+        public runtimeVersion: string;
+        public mdReserved: number;
+        public mdFlags: number;
+        public streamCount: number;
+        public read(clrDirReader: pe.io.BufferReader): void;
+    }
+    class MetadataStreams {
+        public guids: string[];
+        public strings: pe.io.AddressRange;
+        public blobs: pe.io.AddressRange;
+        public tables: pe.io.AddressRange;
+        public read(metadataBaseAddress: number, streamCount: number, reader: pe.io.BufferReader): void;
+        private _readAlignedNameString(reader);
+        private _readGuidForStream(reader);
+    }
+    class TableStream {
+        public reserved0: number;
+        public version: string;
+        public heapSizes: number;
+        public reserved1: number;
+        public tables: any[][];
+        public stringIndices: string[];
+        public allTypes: Type[];
+        public allFields: FieldInfo[];
+        public allMethods: MethodInfo[];
+        public allParameters: ParameterInfo[];
+        public read(reader: pe.io.BufferReader, stringCount: number, guidCount: number, blobCount: number): void;
+        private _readTableRowCounts(valid, tableReader);
+        private _populateApiObjects(tableCounts);
+        private _populateTableObjects(table, Ctor, count, apiTable?);
+        private _populateTableTypes();
+        private _populateTableRows(tableCounts, tableTypes);
+        private _readTableRows(tableCounts, tableTypes, reader);
     }
     module metadata {
         enum ClrImageFlags {
