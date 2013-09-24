@@ -7,6 +7,9 @@ var __extends = this.__extends || function (d, b) {
 var pe;
 (function (pe) {
     (function (io) {
+        /**
+        * 64-bit integer
+        */
         var Long = (function () {
             function Long(lo, hi) {
                 this.lo = lo;
@@ -26,6 +29,9 @@ var pe;
         })();
         io.Long = Long;
 
+        /**
+        * Address and size of a chunk of memory
+        */
         var AddressRange = (function () {
             function AddressRange(address, size) {
                 this.address = address;

@@ -1,10 +1,16 @@
 declare module pe.io {
+    /**
+    * 64-bit integer
+    */
     class Long {
         public lo: number;
         public hi: number;
         constructor(lo: number, hi: number);
         public toString(): string;
     }
+    /**
+    * Address and size of a chunk of memory
+    */
     class AddressRange {
         public address: number;
         public size: number;
