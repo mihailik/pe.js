@@ -309,7 +309,7 @@ window.CodeMirror = (function() {
       options.gutters = options.gutters.concat(["CodeMirror-linenumbers"]);
     } else if (found > -1 && !options.lineNumbers) {
       options.gutters = options.gutters.slice(0);
-      options.gutters.splice(i, 1);
+      options.gutters.splice(found, 1);
     }
   }
 
@@ -409,14 +409,14 @@ window.CodeMirror = (function() {
   function updateDisplay(cm, changes, viewPort, forced) {
     var oldFrom = cm.display.showingFrom, oldTo = cm.display.showingTo, updated;
     var visible = visibleLines(cm.display, cm.doc, viewPort);
-    for (;;) {
+    for (var first = true;; first = false) {
       var oldWidth = cm.display.scroller.clientWidth;
       if (!updateDisplayInner(cm, changes, visible, forced)) break;
       updated = true;
       changes = [];
       updateSelection(cm);
       updateScrollbars(cm);
-      if (cm.options.lineWrapping && oldWidth != cm.display.scroller.clientWidth) {
+      if (first && cm.options.lineWrapping && oldWidth != cm.display.scroller.clientWidth) {
         forced = true;
         continue;
       }
@@ -2329,6 +2329,7 @@ window.CodeMirror = (function() {
   }
 
   function makeChangeNoReadonly(doc, change, selUpdate) {
+    if (change.text.length == 1 && change.text[0] == "" && posEq(change.from, change.to)) return;
     var selAfter = computeSelAfterChange(doc, change, selUpdate);
     addToHistory(doc, change, selAfter, doc.cm ? doc.cm.curOp.id : NaN);
 
@@ -3520,7 +3521,8 @@ window.CodeMirror = (function() {
   keyMap.basic = {
     "Left": "goCharLeft", "Right": "goCharRight", "Up": "goLineUp", "Down": "goLineDown",
     "End": "goLineEnd", "Home": "goLineStartSmart", "PageUp": "goPageUp", "PageDown": "goPageDown",
-    "Delete": "delCharAfter", "Backspace": "delCharBefore", "Tab": "defaultTab", "Shift-Tab": "indentAuto",
+    "Delete": "delCharAfter", "Backspace": "delCharBefore", "Shift-Backspace": "delCharBefore",
+    "Tab": "defaultTab", "Shift-Tab": "indentAuto",
     "Enter": "newlineAndIndent", "Insert": "toggleOverwrite"
   };
   // Note that the save and find-related commands aren't defined by
@@ -5878,7 +5880,7 @@ window.CodeMirror = (function() {
 
   // THE END
 
-  CodeMirror.version = "3.16.1";
+  CodeMirror.version = "3.18.1";
 
   return CodeMirror;
 })();
