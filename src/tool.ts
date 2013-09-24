@@ -5,12 +5,31 @@ declare var sampleBuf: Uint8Array;
 var loadedFiles = {};
 
 function init() {
+try {
+  var pageLoadTime: number = Date.now();
+  loadMscrolib();
+  var mscorlibLoadTime = Date.now();
+
   initCore();
-  var totalLoadTime = Date.now() - (<any>window).startPageLoading;
-  document.title += ' ' + (totalLoadTime/1000)+' sec.';
+
+  var totalLoadTime = Date.now();
+
+  var managedDiv = document.getElementById('managedDiv');
+  var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
+  var timingText = ((totalLoadTime - (<any>window).startPageLoading)/1000)+' sec.'+
+    ' ('+((pageLoadTime - (<any>window).startPageLoading)/1000)+' page load, '+
+    ((mscorlibLoadTime - pageLoadTime)/1000)+' mscorlib decoding, '+
+    ((totalLoadTime - mscorlibLoadTime)/1000)+' processing)\n\n';
+    
+
+  managedDiv.innerText = timingText+currentText;
+  managedDiv.textContent = timingText+currentText;
+}
+catch (error) {
+  alert(error);
+}
   
 function initCore() {
-  loadMscrolib();
   var dragSite = document.getElementById('dragSite');
   dragSite.ondragover = dragSite_dragenter;
   dragSite.ondragenter = dragSite_dragenter;
@@ -18,28 +37,28 @@ function initCore() {
   dragSite.ondrop = dragSite_drop;
 
   if (window.opener && window.location.hash) {
-	var loadFileArgument = (<any>window.opener).loadedFiles[window.location.hash];
-	delete (<any>window.opener).loadedFiles[window.location.hash];
-	window.location.hash = "";
+    var loadFileArgument = (<any>window.opener).loadedFiles[window.location.hash];
+    delete (<any>window.opener).loadedFiles[window.location.hash];
+    window.location.hash = "";
 
-	onFileLoaded(loadFileArgument.file, loadFileArgument.assembly);
+    onFileLoaded(loadFileArgument.file, loadFileArgument.assembly);
   }
   else {
-	var bufferReader = new pe.io.BufferReader(sampleBuf);
+    var bufferReader = new pe.io.BufferReader(sampleBuf);
     var appDomain = new pe.managed2.AppDomain();
     var asm = appDomain.read(bufferReader);
-	onFileLoaded({name: "sample.exe"}, asm);
-	isInitialFileLoaded = true; 
+    onFileLoaded(<any>{name: "sample.exe"}, asm);
+    isInitialFileLoaded = true; 
   }
 
   var loadInput = <HTMLInputElement>document.getElementById('loadInput');
   loadInput.onchange = function(evt) {
-	  if (!evt || !evt.target || !(<any>evt.target).files) {
-		  alert("File API is not supported by the browser.");
-		  return;
-	  }
+    if (!evt || !evt.target || !(<any>evt.target).files) {
+      alert("File API is not supported by the browser.");
+      return;
+    }
 
-	  handleDrop((<any>evt.target).files);
+    handleDrop((<any>evt.target).files);
   };
 }
 }
@@ -64,45 +83,45 @@ function dragSite_drop(e) {
   e.cancelBubble = true;
 
   try {
-  if (e.dataTransfer && e.dataTransfer.files) {
-	handleDrop(e.dataTransfer.files);
-  }
+    if (e.dataTransfer && e.dataTransfer.files) {
+      handleDrop(e.dataTransfer.files);
+    }
   }
   catch (error) {
-	setTimeout(function() {
-		alert(error);
-	}, 10);
+    setTimeout(() => {
+      alert(error);
+    }, 10);
   }
 
   return false;
 }
 
-function handleDrop(files) {
+function handleDrop(files: File[]) {
   for (var i = 0; i < files.length; i++) {
-	loadFile(files[i]);
+    loadFile(files[i]);
   }
 }
 
-function loadFile(f) {
+function loadFile(f: File) {
   pe.io.getFileBufferReader(
-	f,
-	function(reader) {
-	  var appDomain = new pe.managed2.AppDomain();
-      var asm = appDomain.read(reader);
-	  onFileLoaded(f, asm);
-	},
-	function(errorGettingReader) {
-	  alert(errorGettingReader);
-	});
+  f,
+  reader => {
+    var appDomain = new pe.managed2.AppDomain();
+    var asm = appDomain.read(reader);
+    onFileLoaded(f, asm);
+  },
+  errorGettingReader => {
+    alert(errorGettingReader);
+  });
 }
 
 var isInitialFileLoaded = null;
 
-function onFileLoaded(f, asm) {
+function onFileLoaded(f: File, asm: pe.managed2.Assembly) {
   if (isInitialFileLoaded===null || isInitialFileLoaded===true) {
-	renderPEFileHeaders(f, asm);
-	isInitialFileLoaded = false;
-	return;
+    renderPEFileHeaders(f, asm);
+    isInitialFileLoaded = false;
+    return;
   }
 
   var linksToOpen = document.getElementById('linksToOpen');
@@ -118,42 +137,42 @@ function onFileLoaded(f, asm) {
   linksToOpen.appendChild(emptySpace);
 
   newLinkToOpen.onclick = function() {
-	linksToOpen.removeChild(newLinkToOpen);
-	linksToOpen.removeChild(emptySpace);
+  linksToOpen.removeChild(newLinkToOpen);
+  linksToOpen.removeChild(emptySpace);
 
-	var createUrl = window.location + "";
-	if (window.location.hash && window.location.hash.length>0)
-	  createUrl = createUrl.substring(0, createUrl.length - window.location.hash.length);
+  var createUrl = window.location + "";
+  if (window.location.hash && window.location.hash.length>0)
+    createUrl = createUrl.substring(0, createUrl.length - window.location.hash.length);
 
-	if (createUrl.substring(createUrl.length-1)==="#")
-	  createUrl = createUrl.substring(0, createUrl.length-1);
+  if (createUrl.substring(createUrl.length-1)==="#")
+    createUrl = createUrl.substring(0, createUrl.length-1);
 
-	createUrl += "#" + f.name;
+  createUrl += "#" + f.name;
 
-	loadedFiles["#" + f.name] = { file: f, assembly: asm };
+  loadedFiles["#" + f.name] = { file: f, assembly: asm };
 
-	var newWindow = window.open(createUrl);
+  var newWindow = window.open(createUrl);
   };
 }
 
 function renderPEFileHeaders(f, asm) {
     var titleElement = document.getElementById('titleElement');
-	var dump = asm + "\n";
+  var dump = asm + "\n";
 
-		for (var iType = 0; iType < asm.types.length; iType++) {
-			dump += "		" + asm.types[iType] + "\n";
+    for (var iType = 0; iType < asm.types.length; iType++) {
+      dump += "    " + asm.types[iType] + "\n";
 
-			for (var iField = 0; iField < asm.types[iType].fields.length; iField++) {
-				dump += "			" + asm.types[iType].fields[iField] + "\n";
-			}
-			for (var iMethod = 0; iMethod < asm.types[iType].methods.length; iMethod++) {
-				dump += "			" + asm.types[iType].methods[iMethod] + "\n";
-			}
-		}
+      for (var iField = 0; iField < asm.types[iType].fields.length; iField++) {
+        dump += "      " + asm.types[iType].fields[iField] + "\n";
+      }
+      for (var iMethod = 0; iMethod < asm.types[iType].methods.length; iMethod++) {
+        dump += "      " + asm.types[iType].methods[iMethod] + "\n";
+      }
+    }
 
-    var managedDiv = document.getElementById('managedDiv');
-	managedDiv.innerText = dump;
-	managedDiv.textContent = dump;
+  var managedDiv = document.getElementById('managedDiv');
+  managedDiv.innerText = dump;
+  managedDiv.textContent = dump;
 }
 
 function formatEnum(x, y) {
@@ -162,54 +181,54 @@ function formatEnum(x, y) {
 }
 
 function formatHex(value) {
-	if (typeof value == "null"
-		|| value === null)
-		return "null";
-	else if(typeof value == "undefined")
-		return "undefined";
-	else if (value==0)
-		return "0";
-	else if (typeof value == "number")
-		return value.toString(16).toUpperCase() + "h";
-	else
-		return value + "";
+  if (typeof value == "null"
+    || value === null)
+    return "null";
+  else if(typeof value == "undefined")
+    return "undefined";
+  else if (value==0)
+    return "0";
+  else if (typeof value == "number")
+    return value.toString(16).toUpperCase() + "h";
+  else
+    return value + "";
 }
 
 function formatAddress(value) {
-	if (typeof value == "null"
-		|| value === null)
-		return "null";
-	else if(typeof value == "undefined")
-		return "undefined";
-	
-	var result = value.toString(16).toUpperCase();
-	if (result.length<=4)
-		result = "0000".substring(result.length) + result + "h";
-	else
-		result = "00000000".substring(result.length) + result + "h";
+  if (typeof value == "null"
+    || value === null)
+    return "null";
+  else if(typeof value == "undefined")
+    return "undefined";
+  
+  var result = value.toString(16).toUpperCase();
+  if (result.length<=4)
+    result = "0000".substring(result.length) + result + "h";
+  else
+    result = "00000000".substring(result.length) + result + "h";
 
-	return result;
+  return result;
 }
 
 function formatBytes(bytes) {
-	var concatResult = [];
-	for (var i = 0; i < bytes.length; i++) {
-		if (i > 0) {
-			if (i % 16 == 0)
-				concatResult.push("\r\n");
-			else if (i % 8 == 0)
-				concatResult.push(" | ");
-			else if (i % 4 == 0)
-				concatResult.push(" ");
-		}
-		
-		if (bytes[i]<16)
-			concatResult.push("0" + bytes[i].toString(16).toUpperCase());
-		else
-			concatResult.push(bytes[i].toString(16).toUpperCase());
-	}
+  var concatResult = [];
+  for (var i = 0; i < bytes.length; i++) {
+    if (i > 0) {
+      if (i % 16 == 0)
+        concatResult.push("\r\n");
+      else if (i % 8 == 0)
+        concatResult.push(" | ");
+      else if (i % 4 == 0)
+        concatResult.push(" ");
+    }
+    
+    if (bytes[i]<16)
+      concatResult.push("0" + bytes[i].toString(16).toUpperCase());
+    else
+      concatResult.push(bytes[i].toString(16).toUpperCase());
+  }
 
-	return " " + concatResult.join(" ");
+  return " " + concatResult.join(" ");
 }
 
 function loadMscrolib() {

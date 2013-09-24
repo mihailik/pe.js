@@ -4,12 +4,26 @@
 var loadedFiles = {};
 
 function init() {
-    initCore();
-    var totalLoadTime = Date.now() - window.startPageLoading;
-    document.title += ' ' + (totalLoadTime / 1000) + ' sec.';
+    try  {
+        var pageLoadTime = Date.now();
+        loadMscrolib();
+        var mscorlibLoadTime = Date.now();
+
+        initCore();
+
+        var totalLoadTime = Date.now();
+
+        var managedDiv = document.getElementById('managedDiv');
+        var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
+        var timingText = ((totalLoadTime - window.startPageLoading) / 1000) + ' sec.' + ' (' + ((pageLoadTime - window.startPageLoading) / 1000) + ' page load, ' + ((mscorlibLoadTime - pageLoadTime) / 1000) + ' mscorlib decoding, ' + ((totalLoadTime - mscorlibLoadTime) / 1000) + ' processing)\n\n';
+
+        managedDiv.innerText = timingText + currentText;
+        managedDiv.textContent = timingText + currentText;
+    } catch (error) {
+        alert(error);
+    }
 
     function initCore() {
-        loadMscrolib();
         var dragSite = document.getElementById('dragSite');
         dragSite.ondragover = dragSite_dragenter;
         dragSite.ondragenter = dragSite_dragenter;
@@ -135,13 +149,13 @@ function renderPEFileHeaders(f, asm) {
     var dump = asm + "\n";
 
     for (var iType = 0; iType < asm.types.length; iType++) {
-        dump += "		" + asm.types[iType] + "\n";
+        dump += "    " + asm.types[iType] + "\n";
 
         for (var iField = 0; iField < asm.types[iType].fields.length; iField++) {
-            dump += "			" + asm.types[iType].fields[iField] + "\n";
+            dump += "      " + asm.types[iType].fields[iField] + "\n";
         }
         for (var iMethod = 0; iMethod < asm.types[iType].methods.length; iMethod++) {
-            dump += "			" + asm.types[iType].methods[iMethod] + "\n";
+            dump += "      " + asm.types[iType].methods[iMethod] + "\n";
         }
     }
 
