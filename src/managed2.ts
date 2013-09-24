@@ -516,11 +516,16 @@ module pe.managed2 {
     }
   } // AssemblyReading
 
+  /**
+  * All the messy raw CLR structures, with indices, GUIDs etc.
+  * This is meant to be exposed from Assembly too (for digging in details when needed),
+  * but not prominently.
+  */
   export class ManagedHeaders {
-    clrDirectory: ClrDirectory = null;
-    clrMetadata: ClrMetadata = null;
-    metadataStreams: MetadataStreams = null;
-    tableStream: TableStream = null;
+    clrDirectory = new ClrDirectory();
+    clrMetadata = new ClrMetadata();
+    metadataStreams = new MetadataStreams();
+    tableStream = new TableStream();
   }
 
   export class ClrDirectory {

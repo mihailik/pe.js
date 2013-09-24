@@ -1269,6 +1269,11 @@ declare module pe.managed2 {
         public addHandler: MethodInfo;
         public removeHandler: MethodInfo;
     }
+    /**
+    * All the messy raw CLR structures, with indices, GUIDs etc.
+    * This is meant to be exposed from Assembly too (for digging in details when needed),
+    * but not prominently.
+    */
     class ManagedHeaders {
         public clrDirectory: ClrDirectory;
         public clrMetadata: ClrMetadata;

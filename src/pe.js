@@ -5477,12 +5477,17 @@ var pe;
             return AssemblyReading;
         })();
 
+        /**
+        * All the messy raw CLR structures, with indices, GUIDs etc.
+        * This is meant to be exposed from Assembly too (for digging in details when needed),
+        * but not prominently.
+        */
         var ManagedHeaders = (function () {
             function ManagedHeaders() {
-                this.clrDirectory = null;
-                this.clrMetadata = null;
-                this.metadataStreams = null;
-                this.tableStream = null;
+                this.clrDirectory = new ClrDirectory();
+                this.clrMetadata = new ClrMetadata();
+                this.metadataStreams = new MetadataStreams();
+                this.tableStream = new TableStream();
             }
             return ManagedHeaders;
         })();
