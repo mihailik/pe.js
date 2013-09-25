@@ -30,7 +30,7 @@ var pe;
         io.Long = Long;
 
         /**
-        * Address and size of a chunk of memory
+        * Address and size of a chunk of memory.
         */
         var AddressRange = (function () {
             function AddressRange(address, size) {
@@ -41,8 +41,12 @@ var pe;
                 if (!this.size)
                     this.size = 0;
             }
-            AddressRange.prototype.mapRelative = function (offset) {
-                var result = offset - this.address;
+            /**
+            * Given an offset within range, calculates the absolute offset.
+            * In case of overflow returns -1.
+            */
+            AddressRange.prototype.mapRelative = function (offsetWithinRange) {
+                var result = offsetWithinRange - this.address;
                 if (result >= 0 && result < this.size)
                     return result;
                 else
@@ -56,21 +60,21 @@ var pe;
         })();
         io.AddressRange = AddressRange;
 
-        var AddressRangeMap = (function (_super) {
-            __extends(AddressRangeMap, _super);
-            function AddressRangeMap(address, size, virtualAddress) {
+        var MappedAddressRange = (function (_super) {
+            __extends(MappedAddressRange, _super);
+            function MappedAddressRange(address, size, virtualAddress) {
                 _super.call(this, address, size);
                 this.virtualAddress = virtualAddress;
 
                 if (!this.virtualAddress)
                     this.virtualAddress = 0;
             }
-            AddressRangeMap.prototype.toString = function () {
+            MappedAddressRange.prototype.toString = function () {
                 return this.address.toString(16).toUpperCase() + ":" + this.size.toString(16).toUpperCase() + "@" + this.virtualAddress + "h";
             };
-            return AddressRangeMap;
+            return MappedAddressRange;
         })(AddressRange);
-        io.AddressRangeMap = AddressRangeMap;
+        io.MappedAddressRange = MappedAddressRange;
 
         var checkBufferReaderOverrideOnFirstCreation = true;
         var hexUtf = (function () {
@@ -661,39 +665,71 @@ var pe;
         var DosHeader = (function () {
             function DosHeader() {
                 this.mz = MZSignature.MZ;
-                // Bytes on last page of file.
+                /**
+                * Bytes on last page of file.
+                */
                 this.cblp = 144;
-                // Pages in file.
+                /**
+                * Pages in file.
+                */
                 this.cp = 3;
-                // Relocations.
+                /**
+                * Relocations.
+                */
                 this.crlc = 0;
-                // Size of header in paragraphs.
+                /**
+                * Size of header in paragraphs.
+                */
                 this.cparhdr = 4;
-                // Minimum extra paragraphs needed.
+                /**
+                * Minimum extra paragraphs needed.
+                */
                 this.minalloc = 0;
-                // Maximum extra paragraphs needed.
+                /**
+                * Maximum extra paragraphs needed.
+                */
                 this.maxalloc = 65535;
-                // Initial (relative) SS value.
+                /**
+                * Initial (relative) SS value.
+                */
                 this.ss = 0;
-                // Initial SP value.
+                /**
+                * Initial SP value.
+                */
                 this.sp = 184;
-                // Checksum.
+                /**
+                * Checksum.
+                */
                 this.csum = 0;
-                // Initial IP value.
+                /**
+                * Initial IP value.
+                */
                 this.ip = 0;
-                // Initial (relative) CS value.
+                /**
+                * Initial (relative) CS value.
+                */
                 this.cs = 0;
-                // File address of relocation table.
+                /**
+                * File address of relocation table.
+                */
                 this.lfarlc = 64;
-                // Overlay number.
+                /**
+                * Overlay number.
+                */
                 this.ovno = 0;
                 this.res1 = new pe.io.Long(0, 0);
-                // OEM identifier (for e_oeminfo).
+                /**
+                * OEM identifier (for e_oeminfo).
+                */
                 this.oemid = 0;
-                // OEM information: number; e_oemid specific.
+                /**
+                * OEM information: number; e_oemid specific.
+                */
                 this.oeminfo = 0;
                 this.reserved = [0, 0, 0, 0, 0];
-                // uint: File address of PE header.
+                /**
+                * uint: File address of PE header.
+                */
                 this.lfanew = 0;
             }
             DosHeader.prototype.toString = function () {
@@ -749,25 +785,39 @@ var pe;
         var PEHeader = (function () {
             function PEHeader() {
                 this.pe = PESignature.PE;
-                // The architecture type of the computer.
-                // An image file can only be run on the specified computer or a system that emulates the specified computer.
+                /**
+                * The architecture type of the computer.
+                * An image file can only be run on the specified computer or a system that emulates the specified computer.
+                */
                 this.machine = Machine.I386;
-                //  UShort. Indicates the size of the section table, which immediately follows the headers.
-                //  Note that the Windows loader limits the number of sections to 96.
+                /**
+                * UShort. Indicates the size of the section table, which immediately follows the headers.
+                * Note that the Windows loader limits the number of sections to 96.
+                */
                 this.numberOfSections = 0;
-                // The low 32 bits of the time stamp of the image.
-                // This represents the date and time the image was created by the linker.
-                // The value is represented in the number of seconds elapsed since
-                // midnight (00:00:00), January 1, 1970, Universal Coordinated Time,
-                // according to the system clock.
+                /**
+                * The low 32 bits of the time stamp of the image.
+                * This represents the date and time the image was created by the linker.
+                * The value is represented in the number of seconds elapsed since
+                * midnight (00:00:00), January 1, 1970, Universal Coordinated Time,
+                * according to the system clock.
+                */
                 this.timestamp = new Date(0);
-                // UInt. The offset of the symbol table, in bytes, or zero if no COFF symbol table exists.
+                /**
+                * UInt. The offset of the symbol table, in bytes, or zero if no COFF symbol table exists.
+                */
                 this.pointerToSymbolTable = 0;
-                // UInt. The number of symbols in the symbol table.
+                /**
+                * UInt. The number of symbols in the symbol table.
+                */
                 this.numberOfSymbols = 0;
-                // UShort. The size of the optional header, in bytes. This value should be 0 for object files.
+                /**
+                * UShort. The size of the optional header, in bytes. This value should be 0 for object files.
+                */
                 this.sizeOfOptionalHeader = 0;
-                // The characteristics of the image.
+                /**
+                * The characteristics of the image.
+                */
                 this.characteristics = ImageCharacteristics.Dll | ImageCharacteristics.Bit32Machine;
             }
             PEHeader.prototype.toString = function () {
@@ -802,143 +852,231 @@ var pe;
         var PESignature = headers.PESignature;
 
         (function (Machine) {
-            // The target CPU is unknown or not specified.
+            /**
+            * The target CPU is unknown or not specified.
+            */
             Machine[Machine["Unknown"] = 0x0000] = "Unknown";
 
-            // Intel 386.
+            /**
+            * Intel 386.
+            */
             Machine[Machine["I386"] = 0x014C] = "I386";
 
-            // MIPS little-endian
+            /**
+            * MIPS little-endian
+            */
             Machine[Machine["R3000"] = 0x0162] = "R3000";
 
-            // MIPS little-endian
+            /**
+            * MIPS little-endian
+            */
             Machine[Machine["R4000"] = 0x0166] = "R4000";
 
-            // MIPS little-endian
+            /**
+            * MIPS little-endian
+            */
             Machine[Machine["R10000"] = 0x0168] = "R10000";
 
-            // MIPS little-endian WCE v2
+            /**
+            * MIPS little-endian WCE v2
+            */
             Machine[Machine["WCEMIPSV2"] = 0x0169] = "WCEMIPSV2";
 
-            // Alpha_AXP
+            /**
+            * Alpha_AXP
+            */
             Machine[Machine["Alpha"] = 0x0184] = "Alpha";
 
-            // SH3 little-endian
+            /**
+            * SH3 little-endian
+            */
             Machine[Machine["SH3"] = 0x01a2] = "SH3";
 
-            // SH3 little-endian. DSP.
+            /**
+            * SH3 little-endian. DSP.
+            */
             Machine[Machine["SH3DSP"] = 0x01a3] = "SH3DSP";
 
-            // SH3E little-endian.
+            /**
+            * SH3E little-endian.
+            */
             Machine[Machine["SH3E"] = 0x01a4] = "SH3E";
 
-            // SH4 little-endian.
+            /**
+            * SH4 little-endian.
+            */
             Machine[Machine["SH4"] = 0x01a6] = "SH4";
 
-            // SH5.
+            /**
+            * SH5.
+            */
             Machine[Machine["SH5"] = 0x01a8] = "SH5";
 
-            // ARM Little-Endian
+            /**
+            * ARM Little-Endian
+            */
             Machine[Machine["ARM"] = 0x01c0] = "ARM";
 
-            // Thumb.
+            /**
+            * Thumb.
+            */
             Machine[Machine["Thumb"] = 0x01c2] = "Thumb";
 
-            // AM33
+            /**
+            * AM33
+            */
             Machine[Machine["AM33"] = 0x01d3] = "AM33";
 
-            // IBM PowerPC Little-Endian
+            /**
+            * IBM PowerPC Little-Endian
+            */
             Machine[Machine["PowerPC"] = 0x01F0] = "PowerPC";
 
-            // PowerPCFP
+            /**
+            * PowerPCFP
+            */
             Machine[Machine["PowerPCFP"] = 0x01f1] = "PowerPCFP";
 
-            // Intel 64
+            /**
+            * Intel 64
+            */
             Machine[Machine["IA64"] = 0x0200] = "IA64";
 
-            // MIPS
+            /**
+            * MIPS
+            */
             Machine[Machine["MIPS16"] = 0x0266] = "MIPS16";
 
-            // ALPHA64
+            /**
+            * ALPHA64
+            */
             Machine[Machine["Alpha64"] = 0x0284] = "Alpha64";
 
-            // MIPS
+            /**
+            * MIPS
+            */
             Machine[Machine["MIPSFPU"] = 0x0366] = "MIPSFPU";
 
-            // MIPS
+            /**
+            * MIPS
+            */
             Machine[Machine["MIPSFPU16"] = 0x0466] = "MIPSFPU16";
 
-            // AXP64
+            /**
+            * AXP64
+            */
             Machine[Machine["AXP64"] = Machine.Alpha64] = "AXP64";
 
-            // Infineon
+            /**
+            * Infineon
+            */
             Machine[Machine["Tricore"] = 0x0520] = "Tricore";
 
-            // CEF
+            /**
+            * CEF
+            */
             Machine[Machine["CEF"] = 0x0CEF] = "CEF";
 
-            // EFI Byte Code
+            /**
+            * EFI Byte Code
+            */
             Machine[Machine["EBC"] = 0x0EBC] = "EBC";
 
-            // AMD64 (K8)
+            /**
+            * AMD64 (K8)
+            */
             Machine[Machine["AMD64"] = 0x8664] = "AMD64";
 
-            // M32R little-endian
+            /**
+            * M32R little-endian
+            */
             Machine[Machine["M32R"] = 0x9041] = "M32R";
 
-            // CEE
+            /**
+            * CEE
+            */
             Machine[Machine["CEE"] = 0xC0EE] = "CEE";
         })(headers.Machine || (headers.Machine = {}));
         var Machine = headers.Machine;
 
         (function (ImageCharacteristics) {
-            // Relocation information was stripped from the file.
-            // The file must be loaded at its preferred base address.
-            // If the base address is not available, the loader reports an error.
+            /**
+            * Relocation information was stripped from the file.
+            * The file must be loaded at its preferred base address.
+            * If the base address is not available, the loader reports an error.
+            */
             ImageCharacteristics[ImageCharacteristics["RelocsStripped"] = 0x0001] = "RelocsStripped";
 
-            // The file is executable (there are no unresolved external references).
+            /**
+            * The file is executable (there are no unresolved external references).
+            */
             ImageCharacteristics[ImageCharacteristics["ExecutableImage"] = 0x0002] = "ExecutableImage";
 
-            // COFF line numbers were stripped from the file.
+            /**
+            * COFF line numbers were stripped from the file.
+            */
             ImageCharacteristics[ImageCharacteristics["LineNumsStripped"] = 0x0004] = "LineNumsStripped";
 
-            // COFF symbol table entries were stripped from file.
+            /**
+            * COFF symbol table entries were stripped from file.
+            */
             ImageCharacteristics[ImageCharacteristics["LocalSymsStripped"] = 0x0008] = "LocalSymsStripped";
 
-            // Aggressively trim the working set.
-            // This value is obsolete as of Windows 2000.
+            /**
+            * Aggressively trim the working set.
+            * This value is obsolete as of Windows 2000.
+            */
             ImageCharacteristics[ImageCharacteristics["AggressiveWsTrim"] = 0x0010] = "AggressiveWsTrim";
 
-            // The application can handle addresses larger than 2 GB.
+            /**
+            * The application can handle addresses larger than 2 GB.
+            */
             ImageCharacteristics[ImageCharacteristics["LargeAddressAware"] = 0x0020] = "LargeAddressAware";
 
-            // The bytes of the word are reversed. This flag is obsolete.
+            /**
+            * The bytes of the word are reversed. This flag is obsolete.
+            */
             ImageCharacteristics[ImageCharacteristics["BytesReversedLo"] = 0x0080] = "BytesReversedLo";
 
-            // The computer supports 32-bit words.
+            /**
+            * The computer supports 32-bit words.
+            */
             ImageCharacteristics[ImageCharacteristics["Bit32Machine"] = 0x0100] = "Bit32Machine";
 
-            // Debugging information was removed and stored separately in another file.
+            /**
+            * Debugging information was removed and stored separately in another file.
+            */
             ImageCharacteristics[ImageCharacteristics["DebugStripped"] = 0x0200] = "DebugStripped";
 
-            // If the image is on removable media, copy it to and run it from the swap file.
+            /**
+            * If the image is on removable media, copy it to and run it from the swap file.
+            */
             ImageCharacteristics[ImageCharacteristics["RemovableRunFromSwap"] = 0x0400] = "RemovableRunFromSwap";
 
-            // If the image is on the network, copy it to and run it from the swap file.
+            /**
+            * If the image is on the network, copy it to and run it from the swap file.
+            */
             ImageCharacteristics[ImageCharacteristics["NetRunFromSwap"] = 0x0800] = "NetRunFromSwap";
 
-            // The image is a system file.
+            /**
+            * The image is a system file.
+            */
             ImageCharacteristics[ImageCharacteristics["System"] = 0x1000] = "System";
 
-            // The image is a DLL file.
-            // While it is an executable file, it cannot be run directly.
+            /**
+            * The image is a DLL file.
+            * While it is an executable file, it cannot be run directly.
+            */
             ImageCharacteristics[ImageCharacteristics["Dll"] = 0x2000] = "Dll";
 
-            // The file should be run only on a uniprocessor computer.
+            /**
+            * The file should be run only on a uniprocessor computer.
+            */
             ImageCharacteristics[ImageCharacteristics["UpSystemOnly"] = 0x4000] = "UpSystemOnly";
 
-            // The bytes of the word are reversed. This flag is obsolete.
+            /**
+            * The bytes of the word are reversed. This flag is obsolete.
+            */
             ImageCharacteristics[ImageCharacteristics["BytesReversedHi"] = 0x8000] = "BytesReversedHi";
         })(headers.ImageCharacteristics || (headers.ImageCharacteristics = {}));
         var ImageCharacteristics = headers.ImageCharacteristics;
@@ -947,82 +1085,130 @@ var pe;
             function OptionalHeader() {
                 this.peMagic = PEMagic.NT32;
                 this.linkerVersion = "";
-                // The size of the code section, in bytes, or the sum of all such sections if there are multiple code sections.
+                /**
+                * The size of the code section, in bytes, or the sum of all such sections if there are multiple code sections.
+                */
                 this.sizeOfCode = 0;
-                // The size of the initialized data section, in bytes, or the sum of all such sections if there are multiple initialized data sections.
+                /**
+                * The size of the initialized data section, in bytes, or the sum of all such sections if there are multiple initialized data sections.
+                */
                 this.sizeOfInitializedData = 0;
-                // The size of the uninitialized data section, in bytes, or the sum of all such sections if there are multiple uninitialized data sections.
+                /**
+                * The size of the uninitialized data section, in bytes, or the sum of all such sections if there are multiple uninitialized data sections.
+                */
                 this.sizeOfUninitializedData = 0;
-                // A pointer to the entry point function, relative to the image base address.
-                // For executable files, this is the starting address.
-                // For device drivers, this is the address of the initialization function.
-                // The entry point function is optional for DLLs.
-                // When no entry point is present, this member is zero.
+                /**
+                * A pointer to the entry point function, relative to the image base address.
+                * For executable files, this is the starting address.
+                * For device drivers, this is the address of the initialization function.
+                * The entry point function is optional for DLLs.
+                * When no entry point is present, this member is zero.
+                */
                 this.addressOfEntryPoint = 0;
-                // A pointer to the beginning of the code section, relative to the image base.
+                /**
+                * A pointer to the beginning of the code section, relative to the image base.
+                */
                 this.baseOfCode = 0x2000;
-                // A pointer to the beginning of the data section, relative to the image base.
+                /**
+                * A pointer to the beginning of the data section, relative to the image base.
+                */
                 this.baseOfData = 0x4000;
-                // Uint or 64-bit long.
-                // The preferred address of the first byte of the image when it is loaded in memory.
-                // This value is a multiple of 64K bytes.
-                // The default value for DLLs is 0x10000000.
-                // The default value for applications is 0x00400000,
-                // except on Windows CE where it is 0x00010000.
+                /**
+                * Uint or 64-bit long.
+                * The preferred address of the first byte of the image when it is loaded in memory.
+                * This value is a multiple of 64K bytes.
+                * The default value for DLLs is 0x10000000.
+                * The default value for applications is 0x00400000,
+                * except on Windows CE where it is 0x00010000.
+                */
                 this.imageBase = 0x4000;
-                // The alignment of sections loaded in memory, in bytes.
-                // This value must be greater than or equal to the FileAlignment member.
-                // The default value is the page size for the system.
+                /**
+                * The alignment of sections loaded in memory, in bytes.
+                * This value must be greater than or equal to the FileAlignment member.
+                * The default value is the page size for the system.
+                */
                 this.sectionAlignment = 0x2000;
-                // The alignment of the raw data of sections in the image file, in bytes.
-                // The value should be a power of 2 between 512 and 64K (inclusive).
-                // The default is 512.
-                // If the <see cref="SectionAlignment"/> member is less than the system page size,
-                // this member must be the same as <see cref="SectionAlignment"/>.
+                /**
+                * The alignment of the raw data of sections in the image file, in bytes.
+                * The value should be a power of 2 between 512 and 64K (inclusive).
+                * The default is 512.
+                * If the <see cref="SectionAlignment"/> member is less than the system page size,
+                * this member must be the same as <see cref="SectionAlignment"/>.
+                */
                 this.fileAlignment = 0x200;
-                // The version of the required operating system.
+                /**
+                * The version of the required operating system.
+                */
                 this.operatingSystemVersion = "";
-                // The version of the image.
+                /**
+                * The version of the image.
+                */
                 this.imageVersion = "";
-                // The version of the subsystem.
+                /**
+                * The version of the subsystem.
+                */
                 this.subsystemVersion = "";
-                // This member is reserved and must be 0.
+                /**
+                * This member is reserved and must be 0.
+                */
                 this.win32VersionValue = 0;
-                // The size of the image, in bytes, including all headers. Must be a multiple of <see cref="SectionAlignment"/>.
+                /**
+                * The size of the image, in bytes, including all headers. Must be a multiple of <see cref="SectionAlignment"/>.
+                */
                 this.sizeOfImage = 0;
-                // The combined size of the MS-DOS stub, the PE header, and the section headers,
-                // rounded to a multiple of the value specified in the FileAlignment member.
+                /**
+                * The combined size of the MS-DOS stub, the PE header, and the section headers,
+                * rounded to a multiple of the value specified in the FileAlignment member.
+                */
                 this.sizeOfHeaders = 0;
-                // The image file checksum.
-                // The following files are validated at load time:
-                // all drivers,
-                // any DLL loaded at boot time,
-                // and any DLL loaded into a critical system process.
+                /**
+                * The image file checksum.
+                * The following files are validated at load time:
+                * all drivers,
+                * any DLL loaded at boot time,
+                * and any DLL loaded into a critical system process.
+                */
                 this.checkSum = 0;
-                // The subsystem required to run this image.
+                /**
+                * The subsystem required to run this image.
+                */
                 this.subsystem = Subsystem.WindowsCUI;
-                // The DLL characteristics of the image.
+                /**
+                * The DLL characteristics of the image.
+                */
                 this.dllCharacteristics = DllCharacteristics.NxCompatible;
-                // Uint or 64 bit long.
-                // The number of bytes to reserve for the stack.
-                // Only the memory specified by the <see cref="SizeOfStackCommit"/> member is committed at load time;
-                // the rest is made available one page at a time until this reserve size is reached.
+                /**
+                * Uint or 64 bit long.
+                * The number of bytes to reserve for the stack.
+                * Only the memory specified by the <see cref="SizeOfStackCommit"/> member is committed at load time;
+                * the rest is made available one page at a time until this reserve size is reached.
+                */
                 this.sizeOfStackReserve = 0x100000;
-                // Uint or 64 bit long.
-                // The number of bytes to commit for the stack.
+                /**
+                * Uint or 64 bit long.
+                * The number of bytes to commit for the stack.
+                */
                 this.sizeOfStackCommit = 0x1000;
-                // Uint or 64 bit long.
-                // The number of bytes to reserve for the local heap.
-                // Only the memory specified by the <see cref="SizeOfHeapCommit"/> member is committed at load time;
-                // the rest is made available one page at a time until this reserve size is reached.
+                /**
+                * Uint or 64 bit long.
+                * The number of bytes to reserve for the local heap.
+                * Only the memory specified by the <see cref="SizeOfHeapCommit"/> member is committed at load time;
+                * the rest is made available one page at a time until this reserve size is reached.
+                */
                 this.sizeOfHeapReserve = 0x100000;
-                // Uint or 64 bit long.
-                // The number of bytes to commit for the local heap.
+                /**
+                * Uint or 64 bit long.
+                * The number of bytes to commit for the local heap.
+                */
                 this.sizeOfHeapCommit = 0x1000;
-                // This member is obsolete.
+                /**
+                * This member is obsolete.
+                */
                 this.loaderFlags = 0;
-                // The number of directory entries in the remainder of the optional header.
-                // Each entry describes a location and size.
+                /**
+                * The number of directory entries in the remainder of the optional header.
+                * Each entry describes a location and size.
+                */
                 this.numberOfRvaAndSizes = 16;
                 this.dataDirectories = [];
             }
@@ -1131,95 +1317,151 @@ var pe;
         var PEMagic = headers.PEMagic;
 
         (function (Subsystem) {
-            // Unknown subsystem.
+            /**
+            * Unknown subsystem.
+            */
             Subsystem[Subsystem["Unknown"] = 0] = "Unknown";
 
-            // No subsystem required (device drivers and native system processes).
+            /**
+            * No subsystem required (device drivers and native system processes).
+            */
             Subsystem[Subsystem["Native"] = 1] = "Native";
 
-            // Windows graphical user interface (GUI) subsystem.
+            /**
+            * Windows graphical user interface (GUI) subsystem.
+            */
             Subsystem[Subsystem["WindowsGUI"] = 2] = "WindowsGUI";
 
-            // Windows character-mode user interface (CUI) subsystem.
+            /**
+            * Windows character-mode user interface (CUI) subsystem.
+            */
             Subsystem[Subsystem["WindowsCUI"] = 3] = "WindowsCUI";
 
-            // OS/2 console subsystem.
+            /**
+            * OS/2 console subsystem.
+            */
             Subsystem[Subsystem["OS2CUI"] = 5] = "OS2CUI";
 
-            // POSIX console subsystem.
+            /**
+            * POSIX console subsystem.
+            */
             Subsystem[Subsystem["POSIXCUI"] = 7] = "POSIXCUI";
 
-            // Image is a native Win9x driver.
+            /**
+            * Image is a native Win9x driver.
+            */
             Subsystem[Subsystem["NativeWindows"] = 8] = "NativeWindows";
 
-            // Windows CE system.
+            /**
+            * Windows CE system.
+            */
             Subsystem[Subsystem["WindowsCEGUI"] = 9] = "WindowsCEGUI";
 
-            // Extensible Firmware Interface (EFI) application.
+            /**
+            * Extensible Firmware Interface (EFI) application.
+            */
             Subsystem[Subsystem["EFIApplication"] = 10] = "EFIApplication";
 
-            // EFI driver with boot services.
+            /**
+            * EFI driver with boot services.
+            */
             Subsystem[Subsystem["EFIBootServiceDriver"] = 11] = "EFIBootServiceDriver";
 
-            // EFI driver with run-time services.
+            /**
+            * EFI driver with run-time services.
+            */
             Subsystem[Subsystem["EFIRuntimeDriver"] = 12] = "EFIRuntimeDriver";
 
-            // EFI ROM image.
+            /**
+            * EFI ROM image.
+            */
             Subsystem[Subsystem["EFIROM"] = 13] = "EFIROM";
 
-            // Xbox system.
+            /**
+            * Xbox system.
+            */
             Subsystem[Subsystem["XBOX"] = 14] = "XBOX";
 
-            // Boot application.
+            /**
+            * Boot application.
+            */
             Subsystem[Subsystem["BootApplication"] = 16] = "BootApplication";
         })(headers.Subsystem || (headers.Subsystem = {}));
         var Subsystem = headers.Subsystem;
 
         (function (DllCharacteristics) {
-            // Reserved.
+            /**
+            * Reserved.
+            */
             DllCharacteristics[DllCharacteristics["ProcessInit"] = 0x0001] = "ProcessInit";
 
-            // Reserved.
+            /**
+            * Reserved.
+            */
             DllCharacteristics[DllCharacteristics["ProcessTerm"] = 0x0002] = "ProcessTerm";
 
-            // Reserved.
+            /**
+            * Reserved.
+            */
             DllCharacteristics[DllCharacteristics["ThreadInit"] = 0x0004] = "ThreadInit";
 
-            // Reserved.
+            /**
+            * Reserved.
+            */
             DllCharacteristics[DllCharacteristics["ThreadTerm"] = 0x0008] = "ThreadTerm";
 
-            // The DLL can be relocated at load time.
+            /**
+            * The DLL can be relocated at load time.
+            */
             DllCharacteristics[DllCharacteristics["DynamicBase"] = 0x0040] = "DynamicBase";
 
-            // Code integrity checks are forced.
-            // If you set this flag and a section contains only uninitialized data,
-            // set the PointerToRawData member of IMAGE_SECTION_HEADER
-            // for that section to zero;
-            // otherwise, the image will fail to load because the digital signature cannot be verified.
+            /**
+            * Code integrity checks are forced.
+            * If you set this flag and a section contains only uninitialized data,
+            * set the PointerToRawData member of IMAGE_SECTION_HEADER
+            * for that section to zero;
+            * otherwise, the image will fail to load because the digital signature cannot be verified.
+            */
             DllCharacteristics[DllCharacteristics["ForceIntegrity"] = 0x0080] = "ForceIntegrity";
 
-            // The image is compatible with data execution prevention (DEP).
+            /**
+            * The image is compatible with data execution prevention (DEP).
+            */
             DllCharacteristics[DllCharacteristics["NxCompatible"] = 0x0100] = "NxCompatible";
 
-            // The image is isolation aware, but should not be isolated.
+            /**
+            * The image is isolation aware, but should not be isolated.
+            */
             DllCharacteristics[DllCharacteristics["NoIsolation"] = 0x0200] = "NoIsolation";
 
-            // The image does not use structured exception handling (SEH). No SE handler may reside in this image.
+            /**
+            * The image does not use structured exception handling (SEH). No SE handler may reside in this image.
+            */
             DllCharacteristics[DllCharacteristics["NoSEH"] = 0x0400] = "NoSEH";
 
-            // Do not bind this image.
+            /**
+            * Do not bind this image.
+            */
             DllCharacteristics[DllCharacteristics["NoBind"] = 0x0800] = "NoBind";
 
-            // The image must run inside an AppContainer.
+            /**
+            * The image must run inside an AppContainer.
+            */
             DllCharacteristics[DllCharacteristics["AppContainer"] = 0x1000] = "AppContainer";
 
-            // WDM (Windows Driver Model) driver.
+            /**
+            * WDM (Windows Driver Model) driver.
+            */
             DllCharacteristics[DllCharacteristics["WdmDriver"] = 0x2000] = "WdmDriver";
 
-            // Reserved (no specific name).
+            /**
+            * Reserved (no specific name).
+            */
             DllCharacteristics[DllCharacteristics["Reserved"] = 0x4000] = "Reserved";
 
-            // The image is terminal server aware.
+            /**
+            * The image is terminal server aware.
+            */
             DllCharacteristics[DllCharacteristics["TerminalServerAware"] = 0x8000] = "TerminalServerAware";
         })(headers.DllCharacteristics || (headers.DllCharacteristics = {}));
         var DllCharacteristics = headers.DllCharacteristics;
@@ -1239,6 +1481,10 @@ var pe;
             DataDirectoryKind[DataDirectoryKind["BoundImport"] = 11] = "BoundImport";
             DataDirectoryKind[DataDirectoryKind["ImportAddressTable"] = 12] = "ImportAddressTable";
             DataDirectoryKind[DataDirectoryKind["DelayImport"] = 13] = "DelayImport";
+
+            /**
+            * Common Language Runtime, look for ClrDirectory at that offset.
+            */
             DataDirectoryKind[DataDirectoryKind["Clr"] = 14] = "Clr";
         })(headers.DataDirectoryKind || (headers.DataDirectoryKind = {}));
         var DataDirectoryKind = headers.DataDirectoryKind;
@@ -1247,27 +1493,39 @@ var pe;
             __extends(SectionHeader, _super);
             function SectionHeader() {
                 _super.call(this);
-                // An 8-byte, null-padded UTF-8 string.
-                // There is no terminating null character if the string is exactly eight characters long.
-                // For longer names, this member contains a forward slash (/)
-                // followed by an ASCII representation of a decimal number that is an offset into the string table.
-                // Executable images do not use a string table
-                // and do not support section names longer than eight characters.
+                /**
+                * An 8-byte, null-padded UTF-8 string.
+                * There is no terminating null character if the string is exactly eight characters long.
+                * For longer names, this member contains a forward slash (/)
+                * followed by an ASCII representation of a decimal number that is an offset into the string table.
+                * Executable images do not use a string table
+                * and do not support section names longer than eight characters.
+                */
                 this.name = "";
-                // A file pointer to the beginning of the relocation entries for the section.
-                // If there are no relocations, this value is zero.
+                /**
+                * A file pointer to the beginning of the relocation entries for the section.
+                * If there are no relocations, this value is zero.
+                */
                 this.pointerToRelocations = 0;
-                // A file pointer to the beginning of the line-number entries for the section.
-                // If there are no COFF line numbers, this value is zero.
+                /**
+                * A file pointer to the beginning of the line-number entries for the section.
+                * If there are no COFF line numbers, this value is zero.
+                */
                 this.pointerToLinenumbers = 0;
-                // Ushort.
-                // The number of relocation entries for the section.
-                // This value is zero for executable images.
+                /**
+                * Ushort.
+                * The number of relocation entries for the section.
+                * This value is zero for executable images.
+                */
                 this.numberOfRelocations = 0;
-                // Ushort.
-                // The number of line-number entries for the section.
+                /**
+                * Ushort.
+                * The number of line-number entries for the section.
+                */
                 this.numberOfLinenumbers = 0;
-                // The characteristics of the image.
+                /**
+                * The characteristics of the image.
+                */
                 this.characteristics = SectionCharacteristics.ContainsCode;
             }
             SectionHeader.prototype.toString = function () {
@@ -1294,7 +1552,7 @@ var pe;
                 this.characteristics = reader.readInt();
             };
             return SectionHeader;
-        })(pe.io.AddressRangeMap);
+        })(pe.io.MappedAddressRange);
         headers.SectionHeader = SectionHeader;
 
         (function (SectionCharacteristics) {
@@ -1303,139 +1561,209 @@ var pe;
             SectionCharacteristics[SectionCharacteristics["Reserved_2h"] = 0x00000002] = "Reserved_2h";
             SectionCharacteristics[SectionCharacteristics["Reserved_4h"] = 0x00000004] = "Reserved_4h";
 
-            // The section should not be padded to the next boundary.
-            // This flag is obsolete and is replaced by Align1Bytes.
+            /**
+            * The section should not be padded to the next boundary.
+            * This flag is obsolete and is replaced by Align1Bytes.
+            */
             SectionCharacteristics[SectionCharacteristics["NoPadding"] = 0x00000008] = "NoPadding";
 
             SectionCharacteristics[SectionCharacteristics["Reserved_10h"] = 0x00000010] = "Reserved_10h";
 
-            // The section contains executable code.
+            /**
+            * The section contains executable code.
+            */
             SectionCharacteristics[SectionCharacteristics["ContainsCode"] = 0x00000020] = "ContainsCode";
 
-            // The section contains initialized data.
+            /**
+            * The section contains initialized data.
+            */
             SectionCharacteristics[SectionCharacteristics["ContainsInitializedData"] = 0x00000040] = "ContainsInitializedData";
 
-            // The section contains uninitialized data.
+            /**
+            * The section contains uninitialized data.
+            */
             SectionCharacteristics[SectionCharacteristics["ContainsUninitializedData"] = 0x00000080] = "ContainsUninitializedData";
 
-            // Reserved.
+            /**
+            * Reserved.
+            */
             SectionCharacteristics[SectionCharacteristics["LinkerOther"] = 0x00000100] = "LinkerOther";
 
-            // The section contains comments or other information.
-            // This is valid only for object files.
+            /**
+            * The section contains comments or other information.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["LinkerInfo"] = 0x00000200] = "LinkerInfo";
 
             SectionCharacteristics[SectionCharacteristics["Reserved_400h"] = 0x00000400] = "Reserved_400h";
 
-            // The section will not become part of the image.
-            // This is valid only for object files.
+            /**
+            * The section will not become part of the image.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["LinkerRemove"] = 0x00000800] = "LinkerRemove";
 
-            // The section contains COMDAT data.
-            // This is valid only for object files.
+            /**
+            * The section contains COMDAT data.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["LinkerCOMDAT"] = 0x00001000] = "LinkerCOMDAT";
 
             SectionCharacteristics[SectionCharacteristics["Reserved_2000h"] = 0x00002000] = "Reserved_2000h";
 
-            // Reset speculative exceptions handling bits in the TLB entries for this section.
+            /**
+            * Reset speculative exceptions handling bits in the TLB entries for this section.
+            */
             SectionCharacteristics[SectionCharacteristics["NoDeferredSpeculativeExecution"] = 0x00004000] = "NoDeferredSpeculativeExecution";
 
-            // The section contains data referenced through the global pointer.
+            /**
+            * The section contains data referenced through the global pointer.
+            */
             SectionCharacteristics[SectionCharacteristics["GlobalPointerRelative"] = 0x00008000] = "GlobalPointerRelative";
 
             SectionCharacteristics[SectionCharacteristics["Reserved_10000h"] = 0x00010000] = "Reserved_10000h";
 
-            // Reserved.
+            /**
+            * Reserved.
+            */
             SectionCharacteristics[SectionCharacteristics["MemoryPurgeable"] = 0x00020000] = "MemoryPurgeable";
 
-            // Reserved.
+            /**
+            * Reserved.
+            */
             SectionCharacteristics[SectionCharacteristics["MemoryLocked"] = 0x00040000] = "MemoryLocked";
 
-            // Reserved.
+            /**
+            * Reserved.
+            */
             SectionCharacteristics[SectionCharacteristics["MemoryPreload"] = 0x00080000] = "MemoryPreload";
 
-            // Align data on a 1-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 1-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align1Bytes"] = 0x00100000] = "Align1Bytes";
 
-            // Align data on a 2-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 2-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align2Bytes"] = 0x00200000] = "Align2Bytes";
 
-            // Align data on a 4-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 4-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align4Bytes"] = 0x00300000] = "Align4Bytes";
 
-            // Align data on a 8-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 8-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align8Bytes"] = 0x00400000] = "Align8Bytes";
 
-            // Align data on a 16-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 16-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align16Bytes"] = 0x00500000] = "Align16Bytes";
 
-            // Align data on a 32-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 32-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align32Bytes"] = 0x00600000] = "Align32Bytes";
 
-            // Align data on a 64-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 64-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align64Bytes"] = 0x00700000] = "Align64Bytes";
 
-            // Align data on a 128-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 128-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align128Bytes"] = 0x00800000] = "Align128Bytes";
 
-            // Align data on a 256-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 256-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align256Bytes"] = 0x00900000] = "Align256Bytes";
 
-            // Align data on a 512-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 512-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align512Bytes"] = 0x00A00000] = "Align512Bytes";
 
-            // Align data on a 1024-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 1024-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align1024Bytes"] = 0x00B00000] = "Align1024Bytes";
 
-            // Align data on a 2048-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 2048-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align2048Bytes"] = 0x00C00000] = "Align2048Bytes";
 
-            // Align data on a 4096-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 4096-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align4096Bytes"] = 0x00D00000] = "Align4096Bytes";
 
-            // Align data on a 8192-byte boundary.
-            // This is valid only for object files.
+            /**
+            * Align data on a 8192-byte boundary.
+            * This is valid only for object files.
+            */
             SectionCharacteristics[SectionCharacteristics["Align8192Bytes"] = 0x00E00000] = "Align8192Bytes";
 
-            // The section contains extended relocations.
-            // The count of relocations for the section exceeds the 16 bits that is reserved for it in the section header.
-            // If the NumberOfRelocations field in the section header is 0xffff,
-            // the actual relocation count is stored in the VirtualAddress field of the first relocation.
-            // It is an error if LinkerRelocationOverflow is set and there are fewer than 0xffff relocations in the section.
+            /**
+            * The section contains extended relocations.
+            * The count of relocations for the section exceeds the 16 bits that is reserved for it in the section header.
+            * If the NumberOfRelocations field in the section header is 0xffff,
+            * the actual relocation count is stored in the VirtualAddress field of the first relocation.
+            * It is an error if LinkerRelocationOverflow is set and there are fewer than 0xffff relocations in the section.
+            */
             SectionCharacteristics[SectionCharacteristics["LinkerRelocationOverflow"] = 0x01000000] = "LinkerRelocationOverflow";
 
-            // The section can be discarded as needed.
+            /**
+            * The section can be discarded as needed.
+            */
             SectionCharacteristics[SectionCharacteristics["MemoryDiscardable"] = 0x02000000] = "MemoryDiscardable";
 
-            // The section cannot be cached.
+            /**
+            * The section cannot be cached.
+            */
             SectionCharacteristics[SectionCharacteristics["MemoryNotCached"] = 0x04000000] = "MemoryNotCached";
 
-            // The section cannot be paged.
+            /**
+            * The section cannot be paged.
+            */
             SectionCharacteristics[SectionCharacteristics["MemoryNotPaged"] = 0x08000000] = "MemoryNotPaged";
 
-            // The section can be shared in memory.
+            /**
+            * The section can be shared in memory.
+            */
             SectionCharacteristics[SectionCharacteristics["MemoryShared"] = 0x10000000] = "MemoryShared";
 
-            // The section can be executed as code.
+            /**
+            * The section can be executed as code.
+            */
             SectionCharacteristics[SectionCharacteristics["MemoryExecute"] = 0x20000000] = "MemoryExecute";
 
-            // The section can be read.
+            /**
+            * The section can be read.
+            */
             SectionCharacteristics[SectionCharacteristics["MemoryRead"] = 0x40000000] = "MemoryRead";
 
-            // The section can be written to.
+            /**
+            * The section can be written to.
+            */
             SectionCharacteristics[SectionCharacteristics["MemoryWrite"] = 0x80000000] = "MemoryWrite";
         })(headers.SectionCharacteristics || (headers.SectionCharacteristics = {}));
         var SectionCharacteristics = headers.SectionCharacteristics;

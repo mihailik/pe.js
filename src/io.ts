@@ -21,7 +21,7 @@ module pe.io {
   }
 
   /**
-  * Address and size of a chunk of memory
+  * Address and size of a chunk of memory.
   */
   export class AddressRange {
     constructor (public address?: number, public size?: number) {
@@ -31,8 +31,12 @@ module pe.io {
         this.size = 0;
     }
 
-    mapRelative(offset: number): number {
-      var result = offset - this.address;
+    /**
+    * Given an offset within range, calculates the absolute offset.
+    * In case of overflow returns -1.
+    */
+    mapRelative(offsetWithinRange: number): number {
+      var result = offsetWithinRange - this.address;
       if (result >= 0 && result < this.size)
         return result;
       else
@@ -42,7 +46,7 @@ module pe.io {
     toString() { return this.address.toString(16).toUpperCase() + ":" + this.size.toString(16).toUpperCase() + "h"; }
   }
 
-  export class AddressRangeMap extends AddressRange {
+  export class MappedAddressRange extends AddressRange {
     constructor(address?: number, size?: number, public virtualAddress?: number) {
       super(address, size);
 
@@ -69,7 +73,7 @@ module pe.io {
     private _view: DataView;
     public offset: number = 0;
 
-    public sections: AddressRangeMap[] = [];
+    public sections: MappedAddressRange[] = [];
     private _currentSectionIndex: number = 0;
 
     constructor(array: number[]);
@@ -268,7 +272,7 @@ module pe.io {
   export class ArrayReader extends BufferReader {
     public offset: number = 0;
 
-    public sections: AddressRangeMap[] = [];
+    public sections: MappedAddressRange[] = [];
 
     constructor(private _array: number[]) {
       super(null);
