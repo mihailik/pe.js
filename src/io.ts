@@ -63,6 +63,10 @@ module pe.io {
   var checkBufferReaderOverrideOnFirstCreation = true;
   var hexUtf: string[];
 
+  export interface Int32Stream {
+    readByte(state, success: (b: number) => void, failure: (e: Error) => void);
+  }
+
   export class BufferReader {
     private _view: DataView;
     public offset: number = 0;

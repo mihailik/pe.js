@@ -5,18 +5,27 @@ var loadedFiles = {};
 
 function init() {
     try  {
+        var managedDiv = document.getElementById('managedDiv');
+        function setText(txt) {
+            var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
+            managedDiv.innerText = txt;
+            managedDiv.textContent = txt;
+        }
+
         var pageLoadTime = Date.now();
+        setText(((pageLoadTime - window.startPageLoading) / 1000) + ' sec. page load...');
+
         loadMscrolib();
         var mscorlibLoadTime = Date.now();
+        setText(((pageLoadTime - window.startPageLoading) / 1000) + ' sec. page load,' + ((mscorlibLoadTime - pageLoadTime) / 1000) + ' mscorlib decoding...');
 
         initCore();
 
         var totalLoadTime = Date.now();
 
-        var managedDiv = document.getElementById('managedDiv');
-        var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
         var timingText = ((totalLoadTime - window.startPageLoading) / 1000) + ' sec.' + ' (' + ((pageLoadTime - window.startPageLoading) / 1000) + ' page load, ' + ((mscorlibLoadTime - pageLoadTime) / 1000) + ' mscorlib decoding, ' + ((totalLoadTime - mscorlibLoadTime) / 1000) + ' processing)\n\n';
 
+        var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
         managedDiv.innerText = timingText + currentText;
         managedDiv.textContent = timingText + currentText;
     } catch (error) {

@@ -30,6 +30,9 @@ declare module pe.io {
         constructor(address?: number, size?: number, virtualAddress?: number);
         public toString(): string;
     }
+    interface Int32Stream {
+        readByte(state: any, success: (b: number) => void, failure: (e: Error) => void): any;
+    }
     class BufferReader {
         private _view;
         public offset: number;
