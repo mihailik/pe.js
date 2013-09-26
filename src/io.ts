@@ -20,6 +20,20 @@ module pe.io {
     }
   }
 
+  /*
+   * Asynchronous reader.
+   */
+  export class IntStream {
+    buf: number[];
+
+    constructor(length: number) {
+    }
+
+    read(count: number, success: () => void, failure: (e: Error) => void): void {
+    }
+  }
+
+
   /**
    * Address and size of a chunk of memory.
    */
@@ -62,10 +76,6 @@ module pe.io {
 
   var checkBufferReaderOverrideOnFirstCreation = true;
   var hexUtf: string[];
-
-  export interface Int32Stream {
-    readByte(state, success: (b: number) => void, failure: (e: Error) => void);
-  }
 
   export class BufferReader {
     private _view: DataView;

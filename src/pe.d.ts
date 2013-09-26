@@ -8,6 +8,11 @@ declare module pe.io {
         constructor(lo: number, hi: number);
         public toString(): string;
     }
+    class IntStream {
+        public buf: number[];
+        constructor(length: number);
+        public read(count: number, success: () => void, failure: (e: Error) => void): void;
+    }
     /**
     * Address and size of a chunk of memory.
     */
@@ -29,9 +34,6 @@ declare module pe.io {
         public virtualAddress: number;
         constructor(address?: number, size?: number, virtualAddress?: number);
         public toString(): string;
-    }
-    interface Int32Stream {
-        readByte(state: any, success: (b: number) => void, failure: (e: Error) => void): any;
     }
     class BufferReader {
         private _view;

@@ -29,6 +29,18 @@ var pe;
         })();
         io.Long = Long;
 
+        /*
+        * Asynchronous reader.
+        */
+        var IntStream = (function () {
+            function IntStream(length) {
+            }
+            IntStream.prototype.read = function (count, success, failure) {
+            };
+            return IntStream;
+        })();
+        io.IntStream = IntStream;
+
         /**
         * Address and size of a chunk of memory.
         */

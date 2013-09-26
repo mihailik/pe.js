@@ -13,17 +13,17 @@ function init() {
         }
 
         var pageLoadTime = Date.now();
-        setText(((pageLoadTime - window.startPageLoading) / 1000) + ' sec. page load...');
+        setText(((pageLoadTime - window.startPageLoading) / 1000) + ' sec. page load, mscorlib...');
 
         loadMscrolib();
         var mscorlibLoadTime = Date.now();
-        setText(((pageLoadTime - window.startPageLoading) / 1000) + ' sec. page load,' + ((mscorlibLoadTime - pageLoadTime) / 1000) + ' mscorlib decoding...');
+        setText(((pageLoadTime - window.startPageLoading) / 1000) + ' sec. page load, ' + ((mscorlibLoadTime - pageLoadTime) / 1000) + ' mscorlib decoding, parsing...');
 
         initCore();
 
         var totalLoadTime = Date.now();
 
-        var timingText = ((totalLoadTime - window.startPageLoading) / 1000) + ' sec.' + ' (' + ((pageLoadTime - window.startPageLoading) / 1000) + ' page load, ' + ((mscorlibLoadTime - pageLoadTime) / 1000) + ' mscorlib decoding, ' + ((totalLoadTime - mscorlibLoadTime) / 1000) + ' processing)\n\n';
+        var timingText = ((totalLoadTime - window.startPageLoading) / 1000) + ' sec.' + ' (' + ((pageLoadTime - window.startPageLoading) / 1000) + ' page load, ' + ((mscorlibLoadTime - pageLoadTime) / 1000) + ' mscorlib decoding, ' + ((totalLoadTime - mscorlibLoadTime) / 1000) + ' parsing)\n\n';
 
         var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
         managedDiv.innerText = timingText + currentText;

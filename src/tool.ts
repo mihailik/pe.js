@@ -14,13 +14,13 @@ try {
   }
 
   var pageLoadTime: number = Date.now();
-  setText(((pageLoadTime - (<any>window).startPageLoading)/1000)+' sec. page load...');
+  setText(((pageLoadTime - (<any>window).startPageLoading)/1000)+' sec. page load, mscorlib...');
 
   loadMscrolib();
   var mscorlibLoadTime = Date.now();
   setText(
-    ((pageLoadTime - (<any>window).startPageLoading)/1000)+' sec. page load,'+
-    ((mscorlibLoadTime - pageLoadTime)/1000)+' mscorlib decoding...');
+    ((pageLoadTime - (<any>window).startPageLoading)/1000)+' sec. page load, '+
+    ((mscorlibLoadTime - pageLoadTime)/1000)+' mscorlib decoding, parsing...');
 
   initCore();
 
@@ -29,7 +29,7 @@ try {
   var timingText = ((totalLoadTime - (<any>window).startPageLoading)/1000)+' sec.'+
     ' ('+((pageLoadTime - (<any>window).startPageLoading)/1000)+' page load, '+
     ((mscorlibLoadTime - pageLoadTime)/1000)+' mscorlib decoding, '+
-    ((totalLoadTime - mscorlibLoadTime)/1000)+' processing)\n\n';
+    ((totalLoadTime - mscorlibLoadTime)/1000)+' parsing)\n\n';
     
   var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
   managedDiv.innerText = timingText + currentText;
