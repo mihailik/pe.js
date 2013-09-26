@@ -60,6 +60,9 @@ var pe;
         })();
         io.AddressRange = AddressRange;
 
+        /**
+        * Address range that's mapped at a virtual address.
+        */
         var MappedAddressRange = (function (_super) {
             __extends(MappedAddressRange, _super);
             function MappedAddressRange(address, size, virtualAddress) {
@@ -77,16 +80,7 @@ var pe;
         io.MappedAddressRange = MappedAddressRange;
 
         var checkBufferReaderOverrideOnFirstCreation = true;
-        var hexUtf = (function () {
-            var buf = [];
-            for (var i = 0; i < 127; i++) {
-                buf.push(String.fromCharCode(i));
-            }
-            for (var i = 127; i < 256; i++) {
-                buf.push("%" + i.toString(16));
-            }
-            return buf;
-        })();
+        var hexUtf;
 
         var BufferReader = (function () {
             function BufferReader(view) {
@@ -211,6 +205,16 @@ var pe;
                     if (b == 0) {
                         i++;
                         break;
+                    }
+
+                    if (!hexUtf) {
+                        hexUtf = [];
+                        for (var iutf = 0; iutf < 127; iutf++) {
+                            hexUtf.push(String.fromCharCode(iutf));
+                        }
+                        for (var iutf = 127; iutf < 256; iutf++) {
+                            hexUtf.push("%" + iutf.toString(16));
+                        }
                     }
 
                     buffer.push(hexUtf[b]);
@@ -1881,6 +1885,8 @@ var pe;
         })();
         unmanaged.DllExport = DllExport;
 
+        
+
         var DllImport = (function () {
             function DllImport() {
                 this.name = "";
@@ -1970,11 +1976,17 @@ var pe;
 
         var ResourceDirectory = (function () {
             function ResourceDirectory() {
-                // Resource flags. This field is reserved for future use. It is currently set to zero.
+                /*
+                * Resource flags. This field is reserved for future use. It is currently set to zero.
+                */
                 this.characteristics = 0;
-                // The time that the resource data was created by the resource compiler
+                /*
+                * The time that the resource data was created by the resource compiler
+                */
                 this.timestamp = new Date(0);
-                // The version number, set by the user.
+                /*
+                * The version number, set by the user.
+                */
                 this.version = "";
                 this.subdirectories = [];
                 this.dataEntries = [];

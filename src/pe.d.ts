@@ -22,6 +22,9 @@ declare module pe.io {
         public mapRelative(offsetWithinRange: number): number;
         public toString(): string;
     }
+    /**
+    * Address range that's mapped at a virtual address.
+    */
     class MappedAddressRange extends AddressRange {
         public virtualAddress: number;
         constructor(address?: number, size?: number, virtualAddress?: number);
@@ -879,7 +882,17 @@ declare module pe.unmanaged {
     class DllExport {
         public name: string;
         public ordinal: number;
+        /**
+        * The address of the exported symbol when loaded into memory, relative to the image base.
+        * For example, the address of an exported function.
+        */
         public exportRva: number;
+        /**
+        * Null-terminated ASCII string in the export section.
+        * This string must be within the range that is given by the export table data directory entry.
+        * This string gives the DLL name and the name of the export (for example, "MYDLL.expfunc")
+        * or the DLL name and the ordinal number of the export (for example, "MYDLL.#27").
+        */
         public forwarder: string;
         static readExports(reader: pe.io.BufferReader, range: pe.io.AddressRange): DllExports;
         private readExportEntry(reader, range);

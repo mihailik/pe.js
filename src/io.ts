@@ -1,7 +1,7 @@
 module pe.io {
   /**
-  * 64-bit integer
-  */
+   * 64-bit integer
+   */
   export class Long {
     constructor (
       public lo: number,
@@ -21,8 +21,8 @@ module pe.io {
   }
 
   /**
-  * Address and size of a chunk of memory.
-  */
+   * Address and size of a chunk of memory.
+   */
   export class AddressRange {
     constructor (public address?: number, public size?: number) {
       if (!this.address)
@@ -32,9 +32,9 @@ module pe.io {
     }
 
     /**
-    * Given an offset within range, calculates the absolute offset.
-    * In case of overflow returns -1.
-    */
+     * Given an offset within range, calculates the absolute offset.
+     * In case of overflow returns -1.
+     */
     mapRelative(offsetWithinRange: number): number {
       var result = offsetWithinRange - this.address;
       if (result >= 0 && result < this.size)
@@ -46,6 +46,9 @@ module pe.io {
     toString() { return this.address.toString(16).toUpperCase() + ":" + this.size.toString(16).toUpperCase() + "h"; }
   }
 
+  /**
+   * Address range that's mapped at a virtual address.
+   */
   export class MappedAddressRange extends AddressRange {
     constructor(address?: number, size?: number, public virtualAddress?: number) {
       super(address, size);
@@ -58,16 +61,7 @@ module pe.io {
   }
 
   var checkBufferReaderOverrideOnFirstCreation = true;
-  var hexUtf = (function () {
-    var buf = [];
-    for (var i = 0; i < 127; i++) {
-      buf.push(String.fromCharCode(i));
-    }
-    for (var i = 127; i < 256; i++) {
-      buf.push("%" + i.toString(16));
-    }
-    return buf;
-  })();
+  var hexUtf: string[];
 
   export class BufferReader {
     private _view: DataView;
@@ -201,6 +195,16 @@ module pe.io {
         if (b == 0) {
           i++;
           break;
+        }
+
+        if (!hexUtf) {
+          hexUtf = [];
+          for (var iutf = 0; iutf < 127; iutf++) {
+            hexUtf.push(String.fromCharCode(iutf));
+          }
+          for (var iutf = 127; iutf < 256; iutf++) {
+            hexUtf.push("%" + iutf.toString(16));
+          }
         }
 
         buffer.push(hexUtf[b]);
