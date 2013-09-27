@@ -17,25 +17,30 @@ function init() {
 
         setTimeout(function () {
             setText(pageLoadTime / 1000 + ' sec. page load, mscorlib...');
-            var startLoadMscorlib = Date.now();
-            loadMscrolib();
-            var mscorlibLoadTime = Date.now() - startLoadMscorlib;
-            setText((pageLoadTime / 1000) + ' sec. page load, ' + (mscorlibLoadTime / 1000) + ' mscorlib decoding');
-
             setTimeout(function () {
-                var startParsing = Date.now();
-                initCore();
+                var startLoadMscorlib = Date.now();
+                loadMscrolib();
+                var mscorlibLoadTime = Date.now() - startLoadMscorlib;
+                setText((pageLoadTime / 1000) + ' sec. page load, ' + (mscorlibLoadTime / 1000) + ' mscorlib decoding');
 
-                var parseTime = Date.now() - startParsing;
-                var totalLoadTime = parseTime + mscorlibLoadTime + pageLoadTime;
+                setTimeout(function () {
+                    setText((pageLoadTime / 1000) + ' sec. page load, ' + (mscorlibLoadTime / 1000) + ' mscorlib decoding, parsing...');
+                    setTimeout(function () {
+                        var startParsing = Date.now();
+                        initCore();
 
-                var timingText = (totalLoadTime / 1000) + ' sec.' + ' (' + (pageLoadTime / 1000) + ' page load, ' + (mscorlibLoadTime / 1000) + ' mscorlib decoding, ' + (parseTime / 1000) + ' parsing)\n\n';
+                        var parseTime = Date.now() - startParsing;
+                        var totalLoadTime = parseTime + mscorlibLoadTime + pageLoadTime;
 
-                var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
-                managedDiv.innerText = timingText + currentText;
-                managedDiv.textContent = timingText + currentText;
-            }, 10);
-        }, 10);
+                        var timingText = (totalLoadTime / 1000) + ' sec.' + ' (' + (pageLoadTime / 1000) + ' page load, ' + (mscorlibLoadTime / 1000) + ' mscorlib decoding, ' + (parseTime / 1000) + ' parsing)\n\n';
+
+                        var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
+                        managedDiv.innerText = timingText + currentText;
+                        managedDiv.textContent = timingText + currentText;
+                    }, 1);
+                }, 100);
+            }, 1);
+        }, 100);
     } catch (error) {
         alert(error);
     }
