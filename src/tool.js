@@ -37,9 +37,9 @@ function init() {
                         var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
                         managedDiv.innerText = timingText + currentText;
                         managedDiv.textContent = timingText + currentText;
-                    }, 1);
+                    }, 100);
                 }, 100);
-            }, 1);
+            }, 100);
         }, 100);
     } catch (error) {
         alert(error);
