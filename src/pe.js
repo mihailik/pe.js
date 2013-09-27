@@ -33,7 +33,9 @@ var pe;
         * Asynchronous reader.
         */
         var IntStream = (function () {
-            function IntStream(length) {
+            function IntStream(bufLength) {
+                this.size = 0;
+                this.buf = new Uint32Array(bufLength);
             }
             IntStream.prototype.read = function (count, success, failure) {
             };
@@ -643,13 +645,11 @@ var pe;
             };
 
             PEFileHeaders.prototype.read = function (reader) {
-                var dosHeaderSize = 64;
-
                 if (!this.dosHeader)
                     this.dosHeader = new DosHeader();
                 this.dosHeader.read(reader);
 
-                var dosHeaderLength = this.dosHeader.lfanew - dosHeaderSize;
+                var dosHeaderLength = this.dosHeader.lfanew - DosHeader.size;
                 if (dosHeaderLength > 0)
                     this.dosStub = reader.readBytes(dosHeaderLength);
                 else
@@ -754,6 +754,38 @@ var pe;
                 return result;
             };
 
+            DosHeader.prototype.read2 = function (buf) {
+                this.mz = buf[0] & 0xFFFF;
+                this.cblp = (buf[0] >> 16) & 0xFFFF;
+                this.cp = buf[0] & 0xFFFF;
+                this.crlc = (buf[0] >> 16) & 0xFFFF;
+                this.cparhdr = buf[0] & 0xFFFF;
+                this.minalloc = (buf[0] >> 16) & 0xFFFF;
+                this.maxalloc = buf[0] & 0xFFFF;
+                this.ss = (buf[0] >> 16) & 0xFFFF;
+                this.sp = buf[0] & 0xFFFF;
+                this.csum = (buf[0] >> 16) & 0xFFFF;
+                this.ip = buf[0] & 0xFFFF;
+                this.cs = (buf[0] >> 16) & 0xFFFF;
+                this.lfarlc = buf[0] & 0xFFFF;
+                this.ovno = (buf[0] >> 16) & 0xFFFF;
+                //      this.res1 = reader.readLong();
+                //
+                //      this.oemid = reader.readShort();
+                //      this.oeminfo = reader.readShort();
+                //
+                //      if (!this.reserved)
+                //        this.reserved = [];
+                //
+                //      for (var i = 0; i < 5; i++) {
+                //        this.reserved[i] = reader.readInt();
+                //      }
+                //
+                //      this.reserved.length = 5;
+                //
+                //      this.lfanew = reader.readInt();
+            };
+
             DosHeader.prototype.read = function (reader) {
                 this.mz = reader.readShort();
                 if (this.mz != MZSignature.MZ)
@@ -789,6 +821,7 @@ var pe;
 
                 this.lfanew = reader.readInt();
             };
+            DosHeader.size = 64;
             return DosHeader;
         })();
         headers.DosHeader = DosHeader;
@@ -8024,5 +8057,58 @@ var pe;
         var metadata = managed2.metadata;
     })(pe.managed2 || (pe.managed2 = {}));
     var managed2 = pe.managed2;
+})(pe || (pe = {}));
+/// <reference path="headers.ts" />
+/// <reference path="unmanaged.ts" />
+/// <reference path="managed.ts" />
+/// <reference path="managed2.ts" />
+/// <reference path="io.ts" />
+var pe;
+(function (pe) {
+    /*
+    * Logical 'universe' used to resolve inter-file references.
+    */
+    var LoaderContext = (function () {
+        function LoaderContext() {
+            this.loaded = [];
+        }
+        LoaderContext.prototype.beginRead = function (path) {
+            return new LoaderContext.FileReader(path);
+        };
+        return LoaderContext;
+    })();
+    pe.LoaderContext = LoaderContext;
+
+    (function (LoaderContext) {
+        /*
+        * State of reading a particular PE file.
+        */
+        var FileReader = (function () {
+            function FileReader(path) {
+                this.path = path;
+                this.buffer = null;
+                this._parsePhase = 0;
+            }
+            /*
+            * @see size property on input contains the number of 32-bit integers populated with data in @see buffer
+            * @return number of 32-bit integers expected
+            */
+            FileReader.prototype.parseNext = function () {
+                switch (this._parsePhase) {
+                    case 0:
+                        if (this.size < pe.headers.DosHeader.size)
+                            return pe.headers.DosHeader.size - this.size;
+
+                        break;
+                    case 1:
+                        break;
+                }
+                throw null;
+            };
+            return FileReader;
+        })();
+        LoaderContext.FileReader = FileReader;
+    })(pe.LoaderContext || (pe.LoaderContext = {}));
+    var LoaderContext = pe.LoaderContext;
 })(pe || (pe = {}));
 //# sourceMappingURL=pe.js.map

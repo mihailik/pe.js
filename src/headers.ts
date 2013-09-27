@@ -20,13 +20,11 @@ module pe.headers {
     }
 
     read(reader: io.BufferReader) {
-      var dosHeaderSize: number = 64;
-
       if (!this.dosHeader)
         this.dosHeader = new DosHeader();
       this.dosHeader.read(reader);
 
-      var dosHeaderLength = this.dosHeader.lfanew - dosHeaderSize;
+      var dosHeaderLength = this.dosHeader.lfanew - DosHeader.size;
       if (dosHeaderLength > 0)
         this.dosStub = reader.readBytes(dosHeaderLength);
       else
@@ -54,6 +52,8 @@ module pe.headers {
   }
 
   export class DosHeader {
+    static size = 64;
+
     mz: MZSignature = MZSignature.MZ;
 
     /**
@@ -152,6 +152,40 @@ module pe.headers {
         typeof this.lfanew);
 
       return result;
+    }
+
+    read2(buf: Uint32Array) {
+      this.mz = buf[0] & 0xFFFF;
+      this.cblp = (buf[0] >> 16) & 0xFFFF;
+      this.cp = buf[0] & 0xFFFF;
+      this.crlc = (buf[0] >> 16) & 0xFFFF;
+      this.cparhdr = buf[0] & 0xFFFF;
+      this.minalloc = (buf[0] >> 16) & 0xFFFF;
+      this.maxalloc = buf[0] & 0xFFFF;
+      this.ss = (buf[0] >> 16) & 0xFFFF;
+      this.sp = buf[0] & 0xFFFF;
+      this.csum = (buf[0] >> 16) & 0xFFFF;
+      this.ip = buf[0] & 0xFFFF;
+      this.cs = (buf[0] >> 16) & 0xFFFF;
+      this.lfarlc = buf[0] & 0xFFFF;
+      this.ovno = (buf[0] >> 16) & 0xFFFF;
+      
+//      this.res1 = reader.readLong();
+//
+//      this.oemid = reader.readShort();
+//      this.oeminfo = reader.readShort();
+//
+//      if (!this.reserved)
+//        this.reserved = [];
+//
+//      for (var i = 0; i < 5; i++) {
+//        this.reserved[i] = reader.readInt();
+//      }
+//
+//      this.reserved.length = 5;
+//
+//      this.lfanew = reader.readInt();
+
     }
 
     read(reader: io.BufferReader) {

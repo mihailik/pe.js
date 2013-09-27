@@ -24,15 +24,16 @@ module pe.io {
    * Asynchronous reader.
    */
   export class IntStream {
-    buf: number[];
+    buf: Uint32Array;
+    size = 0;
 
-    constructor(length: number) {
+    constructor(bufLength: number) {
+      this.buf = new Uint32Array(bufLength);
     }
 
     read(count: number, success: () => void, failure: (e: Error) => void): void {
     }
   }
-
 
   /**
    * Address and size of a chunk of memory.

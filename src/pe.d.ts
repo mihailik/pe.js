@@ -9,8 +9,9 @@ declare module pe.io {
         public toString(): string;
     }
     class IntStream {
-        public buf: number[];
-        constructor(length: number);
+        public buf: Uint32Array;
+        public size: number;
+        constructor(bufLength: number);
         public read(count: number, success: () => void, failure: (e: Error) => void): void;
     }
     /**
@@ -90,6 +91,7 @@ declare module pe.headers {
         public read(reader: pe.io.BufferReader): void;
     }
     class DosHeader {
+        static size: number;
         public mz: MZSignature;
         /**
         * Bytes on last page of file.
@@ -158,6 +160,7 @@ declare module pe.headers {
         */
         public lfanew: number;
         public toString(): string;
+        public read2(buf: Uint32Array): void;
         public read(reader: pe.io.BufferReader): void;
     }
     enum MZSignature {
@@ -2210,5 +2213,29 @@ declare module pe.managed2 {
             MethodSpec = 0x2B,
             GenericParamConstraint = 0x2C,
         }
+    }
+}
+declare module pe {
+    class LoaderContext {
+        public loaded: PEFile[];
+        public beginRead(path: string): LoaderContext.FileReader;
+    }
+    module LoaderContext {
+        class FileReader {
+            public path: string;
+            public size: number;
+            public buffer: Uint32Array;
+            private _parsePhase;
+            constructor(path: string);
+            public parseNext(): number;
+        }
+    }
+    interface PEFile {
+        path: string;
+        dosHeader: pe.headers.DosHeader;
+        dosStub: Uint8Array;
+        peHeader: pe.headers.PEHeader;
+        optionalHeader: pe.headers.OptionalHeader;
+        sectionHeaders: pe.headers.SectionHeader[];
     }
 }
