@@ -41,8 +41,8 @@ try {
       var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
       managedDiv.innerText = timingText + currentText;
       managedDiv.textContent = timingText + currentText;
-    });
-  }, 1);
+    }, 10);
+  }, 10);
 
 }
 catch (error) {
