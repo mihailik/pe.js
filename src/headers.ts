@@ -154,38 +154,48 @@ module pe.headers {
       return result;
     }
 
-    read2(buf: Uint32Array) {
-      this.mz = buf[0] & 0xFFFF;
-      this.cblp = (buf[0] >> 16) & 0xFFFF;
-      this.cp = buf[0] & 0xFFFF;
-      this.crlc = (buf[0] >> 16) & 0xFFFF;
-      this.cparhdr = buf[0] & 0xFFFF;
-      this.minalloc = (buf[0] >> 16) & 0xFFFF;
-      this.maxalloc = buf[0] & 0xFFFF;
-      this.ss = (buf[0] >> 16) & 0xFFFF;
-      this.sp = buf[0] & 0xFFFF;
-      this.csum = (buf[0] >> 16) & 0xFFFF;
-      this.ip = buf[0] & 0xFFFF;
-      this.cs = (buf[0] >> 16) & 0xFFFF;
-      this.lfarlc = buf[0] & 0xFFFF;
-      this.ovno = (buf[0] >> 16) & 0xFFFF;
-      
-//      this.res1 = reader.readLong();
-//
-//      this.oemid = reader.readShort();
-//      this.oeminfo = reader.readShort();
-//
-//      if (!this.reserved)
-//        this.reserved = [];
-//
-//      for (var i = 0; i < 5; i++) {
-//        this.reserved[i] = reader.readInt();
-//      }
-//
-//      this.reserved.length = 5;
-//
-//      this.lfanew = reader.readInt();
+    populateFromUInt32Array(buf: Uint32Array, pos: number) {
+      var i = buf[pos];
+      this.mz = i & 0xFFFF;
+      this.cblp = (i >> 16) & 0xFFFF;
+      i = buf[pos+1];
+      this.cp = i & 0xFFFF;
+      this.crlc = (i >> 16) & 0xFFFF;
+      i = buf[pos+2];
+      this.cparhdr = i & 0xFFFF;
+      this.minalloc = (i >> 16) & 0xFFFF;
+      i = buf[pos+3];
+      this.maxalloc = i & 0xFFFF;
+      this.ss = (i >> 16) & 0xFFFF;
+      i = buf[pos+4];
+      this.sp = i & 0xFFFF;
+      this.csum = (i >> 16) & 0xFFFF;
+      i = buf[pos+5];
+      this.ip = i & 0xFFFF;
+      this.cs = (i >> 16) & 0xFFFF;
+      i = buf[pos+6];
+      this.lfarlc = i & 0xFFFF;
+      this.ovno = (i >> 16) & 0xFFFF;
+      if (this.res1===null) {
+        this.res1 = new pe.io.Long(buf[pos+7], buf[pos+8]);
+      }
+      else {
+        this.res1.lo = buf[pos+7];
+        this.res1.hi = buf[pos+8];
+      }
+      i = buf[pos+9];
+      this.oemid = i & 0xFFFF;
+      this.oeminfo = (i >> 16) & 0xFFFF;
+      if (!this.reserved)
+        this.reserved = [];
 
+      for (var i = 0; i < 5; i++) {
+        this.reserved[i] = buf[pos+10 + i];
+      }
+
+      this.reserved.length = 5;
+
+      this.lfanew = buf[pos+16];
     }
 
     read(reader: io.BufferReader) {

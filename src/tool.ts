@@ -16,9 +16,9 @@ try {
   var pageLoadTime: number = Date.now() - (<any>window).startPageLoading;
   setText(pageLoadTime/1000+' sec. page load');
 
-  setTimeout(function() {
+  setTimeout(function() { try {
     setText(pageLoadTime/1000+' sec. page load, mscorlib...');
-    setTimeout(function() {
+    setTimeout(function() { try {
       var startLoadMscorlib = Date.now();
       loadMscrolib();
       var mscorlibLoadTime = Date.now() - startLoadMscorlib;
@@ -26,12 +26,12 @@ try {
         (pageLoadTime/1000)+' sec. page load, '+
         (mscorlibLoadTime/1000)+' mscorlib decoding');
     
-      setTimeout(function() {
+      setTimeout(function() { try {
 
         setText(
           (pageLoadTime/1000)+' sec. page load, '+
           (mscorlibLoadTime/1000)+' mscorlib decoding, parsing...');
-        setTimeout(function() {
+        setTimeout(function() { try {
           var startParsing = Date.now();
           initCore();
         
@@ -47,10 +47,14 @@ try {
           var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
           managedDiv.innerText = timingText + currentText;
           managedDiv.textContent = timingText + currentText;
+        } catch(error) { alert(error+' '+error.message); }
         }, 100);
         
+      } catch(error) { alert(error+' '+error.message); }
       }, 100);
+    } catch(error) { alert(error+' '+error.message); }
     }, 100);
+  } catch(error) { alert(error+' '+error.message); }
   }, 100);
 
 }

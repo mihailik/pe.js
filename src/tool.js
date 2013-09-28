@@ -16,30 +16,46 @@ function init() {
         setText(pageLoadTime / 1000 + ' sec. page load');
 
         setTimeout(function () {
-            setText(pageLoadTime / 1000 + ' sec. page load, mscorlib...');
-            setTimeout(function () {
-                var startLoadMscorlib = Date.now();
-                loadMscrolib();
-                var mscorlibLoadTime = Date.now() - startLoadMscorlib;
-                setText((pageLoadTime / 1000) + ' sec. page load, ' + (mscorlibLoadTime / 1000) + ' mscorlib decoding');
-
+            try  {
+                setText(pageLoadTime / 1000 + ' sec. page load, mscorlib...');
                 setTimeout(function () {
-                    setText((pageLoadTime / 1000) + ' sec. page load, ' + (mscorlibLoadTime / 1000) + ' mscorlib decoding, parsing...');
-                    setTimeout(function () {
-                        var startParsing = Date.now();
-                        initCore();
+                    try  {
+                        var startLoadMscorlib = Date.now();
+                        loadMscrolib();
+                        var mscorlibLoadTime = Date.now() - startLoadMscorlib;
+                        setText((pageLoadTime / 1000) + ' sec. page load, ' + (mscorlibLoadTime / 1000) + ' mscorlib decoding');
 
-                        var parseTime = Date.now() - startParsing;
-                        var totalLoadTime = parseTime + mscorlibLoadTime + pageLoadTime;
+                        setTimeout(function () {
+                            try  {
+                                setText((pageLoadTime / 1000) + ' sec. page load, ' + (mscorlibLoadTime / 1000) + ' mscorlib decoding, parsing...');
+                                setTimeout(function () {
+                                    try  {
+                                        var startParsing = Date.now();
+                                        initCore();
 
-                        var timingText = (totalLoadTime / 1000) + ' sec.' + ' (' + (pageLoadTime / 1000) + ' page load, ' + (mscorlibLoadTime / 1000) + ' mscorlib decoding, ' + (parseTime / 1000) + ' parsing)\n\n';
+                                        var parseTime = Date.now() - startParsing;
+                                        var totalLoadTime = parseTime + mscorlibLoadTime + pageLoadTime;
 
-                        var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
-                        managedDiv.innerText = timingText + currentText;
-                        managedDiv.textContent = timingText + currentText;
-                    }, 100);
+                                        var timingText = (totalLoadTime / 1000) + ' sec.' + ' (' + (pageLoadTime / 1000) + ' page load, ' + (mscorlibLoadTime / 1000) + ' mscorlib decoding, ' + (parseTime / 1000) + ' parsing)\n\n';
+
+                                        var currentText = managedDiv.textContent ? managedDiv.textContent : managedDiv.innerText;
+                                        managedDiv.innerText = timingText + currentText;
+                                        managedDiv.textContent = timingText + currentText;
+                                    } catch (error) {
+                                        alert(error + ' ' + error.message);
+                                    }
+                                }, 100);
+                            } catch (error) {
+                                alert(error + ' ' + error.message);
+                            }
+                        }, 100);
+                    } catch (error) {
+                        alert(error + ' ' + error.message);
+                    }
                 }, 100);
-            }, 100);
+            } catch (error) {
+                alert(error + ' ' + error.message);
+            }
         }, 100);
     } catch (error) {
         alert(error);

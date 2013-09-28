@@ -160,7 +160,7 @@ declare module pe.headers {
         */
         public lfanew: number;
         public toString(): string;
-        public read2(buf: Uint32Array): void;
+        public populateFromUInt32Array(buf: Uint32Array, pos: number): void;
         public read(reader: pe.io.BufferReader): void;
     }
     enum MZSignature {
