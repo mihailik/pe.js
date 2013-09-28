@@ -44,19 +44,19 @@ function init() {
                                     } catch (error) {
                                         alert(error + ' ' + error.message);
                                     }
-                                }, 100);
+                                }, 200);
                             } catch (error) {
                                 alert(error + ' ' + error.message);
                             }
-                        }, 100);
+                        }, 200);
                     } catch (error) {
                         alert(error + ' ' + error.message);
                     }
-                }, 100);
+                }, 200);
             } catch (error) {
                 alert(error + ' ' + error.message);
             }
-        }, 100);
+        }, 200);
     } catch (error) {
         alert(error);
     }

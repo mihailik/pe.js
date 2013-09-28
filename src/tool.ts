@@ -48,14 +48,14 @@ try {
           managedDiv.innerText = timingText + currentText;
           managedDiv.textContent = timingText + currentText;
         } catch(error) { alert(error+' '+error.message); }
-        }, 100);
+        }, 200);
         
       } catch(error) { alert(error+' '+error.message); }
-      }, 100);
+      }, 200);
     } catch(error) { alert(error+' '+error.message); }
-    }, 100);
+    }, 200);
   } catch(error) { alert(error+' '+error.message); }
-  }, 100);
+  }, 200);
 
 }
 catch (error) {
