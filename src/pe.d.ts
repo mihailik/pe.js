@@ -2222,20 +2222,22 @@ declare module pe {
     }
     module LoaderContext {
         class FileReader {
-            public path: string;
+            public context: LoaderContext;
             public size: number;
             public buffer: Uint32Array;
+            public peFile: PEFile;
             private _parsePhase;
-            constructor(path: string);
+            constructor(context: LoaderContext, path: string);
             public parseNext(): number;
         }
     }
-    interface PEFile {
-        path: string;
-        dosHeader: pe.headers.DosHeader;
-        dosStub: Uint8Array;
-        peHeader: pe.headers.PEHeader;
-        optionalHeader: pe.headers.OptionalHeader;
-        sectionHeaders: pe.headers.SectionHeader[];
+    class PEFile {
+        public path: string;
+        public dosHeader: pe.headers.DosHeader;
+        public dosStub: Uint8Array;
+        public peHeader: pe.headers.PEHeader;
+        public optionalHeader: pe.headers.OptionalHeader;
+        public sectionHeaders: pe.headers.SectionHeader[];
+        constructor(path: string);
     }
 }

@@ -8084,7 +8084,7 @@ var pe;
             this.loaded = [];
         }
         LoaderContext.prototype.beginRead = function (path) {
-            return new LoaderContext.FileReader(path);
+            return new LoaderContext.FileReader(this, path);
         };
         return LoaderContext;
     })();
@@ -8095,22 +8095,31 @@ var pe;
         * State of reading a particular PE file.
         */
         var FileReader = (function () {
-            function FileReader(path) {
-                this.path = path;
+            function FileReader(context, path) {
+                this.context = context;
                 this.buffer = null;
                 this._parsePhase = 0;
+                this.peFile = new pe.PEFile(path);
             }
             /*
             * @see size property on input contains the number of 32-bit integers populated with data in @see buffer
             * @return number of 32-bit integers expected
             */
             FileReader.prototype.parseNext = function () {
+                var offset = 0;
+                var size = this.size;
+
                 switch (this._parsePhase) {
                     case 0:
-                        if (this.size < pe.headers.DosHeader.size)
-                            return pe.headers.DosHeader.size - this.size;
-
+                        if (size < pe.headers.DosHeader.size) {
+                            // TODO: copy all back to zero offset
+                            this.size = size;
+                            return pe.headers.DosHeader.size - size;
+                        }
+                        this.peFile.dosHeader = new pe.headers.DosHeader();
+                        this.peFile.dosHeader.populateFromUInt32Array(this.buffer, offset);
                         break;
+
                     case 1:
                         break;
                 }
@@ -8121,5 +8130,18 @@ var pe;
         LoaderContext.FileReader = FileReader;
     })(pe.LoaderContext || (pe.LoaderContext = {}));
     var LoaderContext = pe.LoaderContext;
+
+    var PEFile = (function () {
+        function PEFile(path) {
+            this.path = path;
+            this.dosHeader = null;
+            this.dosStub = null;
+            this.peHeader = null;
+            this.optionalHeader = null;
+            this.sectionHeaders = null;
+        }
+        return PEFile;
+    })();
+    pe.PEFile = PEFile;
 })(pe || (pe = {}));
 //# sourceMappingURL=pe.js.map
