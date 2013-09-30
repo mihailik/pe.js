@@ -102,7 +102,9 @@ function postBuild() {
 }
 
 function importLatestTsc(txt, callback) {
-    copyTypescriptFile('tsc.js', callback);
+    copyTypescriptFile('tsc.js', function() {
+      copyTypescriptFile('lib.d.ts', callback);
+    });
 
     function copyTypescriptFile(f, callback) {
         copyFile(
