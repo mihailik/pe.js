@@ -27,6 +27,7 @@ ifExists(typescriptRepository,
         // copy typescript stuff into imports/typescript
 
         importLatestTsc('', function() {
+            pe2Compile();
             mainPejsCompile();
         });
     },
@@ -37,6 +38,7 @@ ifExists(typescriptRepository,
         // use typescript compiler from imports/typescript,
         // also DO NOT recompile typescriptServices.js
 
+        pe2Compile();
         mainPejsCompile();
     });
 
@@ -77,6 +79,17 @@ function mainPejsCompile() {
 function toolCompile() {
     runTypeScriptCompiler(
         'tool.ts', null,
+        function(txt) {
+            console.log('tool.js: '+txt);
+            postBuild();
+            console.log('tool.js: inlined');
+        },
+        ['--sourcemap']);
+}
+
+function pe2Compile() {
+    runTypeScriptCompiler(
+        'pe2.ts', null,
         function(txt) {
             console.log('tool.js: '+txt);
             postBuild();
