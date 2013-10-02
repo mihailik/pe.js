@@ -1,5 +1,17 @@
 var pe;
 (function (pe) {
+    (function (io) {
+        var Task = (function () {
+            function Task() {
+            }
+            return Task;
+        })();
+        io.Task = Task;
+    })(pe.io || (pe.io = {}));
+    var io = pe.io;
+})(pe || (pe = {}));
+var pe;
+(function (pe) {
     /// <reference path='io2.ts' />
     (function (headers) {
         var DosHeader = (function () {

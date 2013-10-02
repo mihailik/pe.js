@@ -87,15 +87,45 @@ function toolCompile() {
         ['--sourcemap']);
 }
 
+var firstMain2Compile = true;
 function pe2Compile() {
     runTypeScriptCompiler(
         'pe2.ts', null,
         function(txt) {
-            console.log('tool.js: '+txt);
-            postBuild();
-            console.log('tool.js: inlined');
+            console.log('pe2.js: '+txt);
+            if (firstMain2Compile) {
+                firstMain2Compile = false;
+                tool2Compile();
+            }
         },
         ['--sourcemap']);
+}
+
+function tool2Compile() {
+    runTypeScriptCompiler(
+        'tool2.ts', null,
+        function(txt) {
+            console.log('tool2.js: '+txt);
+            postBuild2();
+            console.log('tool2.js: inlined');
+        },
+        ['--sourcemap']);
+}
+
+function postBuild2() {
+    fs.createReadStream('tool2.html').pipe(
+      new Inline("tool2.html", {
+        //default options:
+        images: true, //inline images
+        scripts: true, //inline scripts
+        stylesheets: true //inline stylesheets
+      }, function(err, data){
+        if(err) throw err;
+        var text = data+'';
+        text = text.replace(/undefined>/g, 'style>');
+        require("fs").writeFileSync("../tool2.html", text);
+      }
+    ));
 }
 
 function postBuild() {
