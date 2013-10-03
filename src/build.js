@@ -98,7 +98,7 @@ function pe2Compile() {
                 tool2Compile();
             }
         },
-        ['--sourcemap']);
+        ['--sourcemap', '--declaration']);
 }
 
 function tool2Compile() {
