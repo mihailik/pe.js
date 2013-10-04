@@ -231,33 +231,63 @@ function init() {
         var pageLoad = Date.now() - window['startPageLoading'];
         log('page ' + pageLoad / 1000 + '... ');
 
-        setTimeout(function () {
-            try  {
-                loadMscorlib(function (buffer, mscorlibLoad, error) {
-                    if (error) {
-                        alert(error + ' ' + error.message);
-                        return;
-                    }
-
-                    log('mscorlib ' + mscorlibLoad / 1000 + '...');
-                });
-            } catch (error) {
+        var mscorlibStart = Date.now();
+        loadMscorlib(function (buffer, error) {
+            if (error) {
                 alert(error + ' ' + error.message);
+                return;
             }
-        }, 100);
+
+            var mscorlibLoad = Date.now() - mscorlibStart;
+            log('mscorlib ' + mscorlibLoad / 1000 + '...');
+        }, function (txt) {
+            return console.log(txt);
+        });
     } catch (error) {
         alert(error);
     }
 }
 
-function loadMscorlib(oncomplete) {
-    /*task.queueWork(50, function() {
-    var base64 = getBase64();
-    if (!base64) {
-    oncomplete(null, task.spentMs, new Error('Element mscorlib.dll is absent.'));
-    return;
-    }
-    }, 50);*/
+function loadMscorlib(oncomplete, progress) {
+    progress('getting mscorlib.dll element with base64 content...');
+    setTimeout(function () {
+        try  {
+            var base64 = getBase64();
+        } catch (error) {
+            oncomplete(null, error);
+            return;
+        }
+        if (!base64) {
+            oncomplete(null, new Error('mscorlib.dll element is not found.'));
+            return;
+        }
+
+        progress('decoding base64...');
+        setTimeout(function () {
+            try  {
+                var binText = getBinText(base64);
+            } catch (error) {
+                oncomplete(null, error);
+                return;
+            }
+
+            progress('copying into binary buffer...');
+
+            setTimeout(function () {
+                try  {
+                    var buf = createBuffer(binText.length / 4);
+
+                    copyBinTextToBuffer(binText, buf, 0, buf.length);
+                } catch (error) {
+                    oncomplete(null, error);
+                    return;
+                }
+
+                oncomplete(buf, null);
+            }, 50);
+        }, 50);
+    }, 50);
+
     function getBase64() {
         var mscorlibDllScript = document.getElementById('mscorlib.dll');
         if (mscorlibDllScript === null) {
