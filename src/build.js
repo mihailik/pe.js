@@ -11,11 +11,18 @@ ifExists('imports/mono/mscorlib.dll',
   function() {
     console.log('Updating base64 mscorlib.dll...');
     var mscorlibDll = fs.readFileSync('imports/mono/mscorlib.dll');
-    var base64 = mscorlibDll.toString('base64');
-    fs.writeFileSync('mscorlib.js', base64);
+    var pieceCount = 16;
+    for (var i = 0; i < pieceCount; i++) {
+      var pieceLength = mscorlibDll.length/pieceCount;
+      var pieceOffset = pieceLength*i;
+      var base64 = mscorlibDll.slice(pieceOffset, pieceOffset+pieceLength).toString('base64');
+      fs.writeFileSync('mscorlib'+i+'.js', base64);
+    }
   },
   function() {
+    console.log('No mscorlib.dll to update.');
   });
+
 
 ifExists(typescriptRepository,
     function typescriptRepositoryPresent() {
