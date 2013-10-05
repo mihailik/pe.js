@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" style="height: 100%;">
 <head>
 	<title>PE.js demo 2</title>
- 	<script>window.startPageLoading = Date.now();</script>
+ 	<script>window.startPageLoading = Date.now ? Date.now() : new Date().getTime();</script>
 	<script src="pe2.js"></script>
     <script src="tool2.js"></script>
 </head>

@@ -3,9 +3,16 @@
 
 var loadedFiles = {};
 
+function getTime() {
+    if (Date.now)
+        return Date.now();
+    else
+        return new Date().getTime();
+}
+
 function init() {
     try  {
-        var mscStart = Date.now();
+        var mscStart = getTime();
         var pageLoadTime = (mscStart - startPageLoading) / 1000;
         var preLog = 'page ' + pageLoadTime + 's.';
         log(preLog);
@@ -49,7 +56,7 @@ function init() {
                 if (i < pieceCount) {
                     setTimeout(nextGetBase64, 50);
                 } else {
-                    var mscTime = (Date.now() - mscStart) / 1000;
+                    var mscTime = (getTime() - mscStart) / 1000;
                     log(preLog + ' mscorlib.dll[' + buf.length + '/' + pieceCount + '] ' + mscTime + 's.');
                 }
             } catch (error) {
@@ -59,7 +66,7 @@ function init() {
 
         setTimeout(nextGetBase64, 50);
     } catch (error) {
-        alert(error);
+        alert(error + ' ' + error.message);
     }
 
     var logElement;
@@ -112,8 +119,25 @@ function createAtob() {
     if (window.atob) {
         _atob = window.atob;
     } else {
-        var polyfill = 'function() {' + 'var exports = {};' + '(function(){var t="undefined"!=typeof exports?exports:window,' + 'r="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",' + 'o=function(){try{document.createElement("$")}catch(t){return t}}();' + 't.btoa||(t.btoa=function(t){for(var e,n,a=0,c=r,f="";t.charAt(0|a)||' + '(c="=",a%1);f+=c.charAt(63&e>>8-8*(a%1))){if(n=t.charCodeAt(a+=.75),n>255)' + 'throw o;e=e<<8|n}return f}),t.atob||(t.atob=function(t){if(t=t.replace(/=+$/,""),' + '1==t.length%4)throw o;for(var e,n,a=0,c=0,f="";n=t.charAt(c++);~n&&' + '(e=a%4?64*e+n:n,a++%4)?f+=String.fromCharCode(255&e>>(6&-2*a)):0)n=r.indexOf(n);' + 'return f})})();' + 'return exports; }';
-        _atob = eval(polyfill).atob;
+        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=', INVALID_CHARACTER_ERR = ((function () {
+            try  {
+                document.createElement('$');
+            } catch (error) {
+                return error;
+            }
+        })());
+        _atob = function (input) {
+            input = input.replace(/=+$/, '');
+            if (input.length % 4 == 1)
+                throw INVALID_CHARACTER_ERR;
+            for (// initialize result and counters
+            var bc = 0, bs, buffer, idx = 0, output = ''; buffer = input.charAt(idx++); ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer, bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0) {
+                // try to find character in table (0-63, not found => -1)
+                buffer = chars.indexOf(buffer);
+            }
+            return output;
+        };
+        alert(_atob);
     }
 }
 
