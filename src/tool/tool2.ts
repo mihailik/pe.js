@@ -1,4 +1,4 @@
-/// <reference path='pe2.d.ts' />
+/// <reference path='../pe2.d.ts' />
 
 declare var startPageLoading: number;
 
@@ -129,7 +129,7 @@ function copyBinTextToBuffer(
 
 var _atob;
 function createAtob() {
-  if (window.atob) {
+  if (window.atob && false) {
     _atob = window.atob;
   }
   else {
@@ -143,21 +143,20 @@ function createAtob() {
       if (input.length % 4 == 1) throw INVALID_CHARACTER_ERR;
       for (
         // initialize result and counters
-        var bc = 0, bs, buffer, idx = 0, output = '';
+        var bc: any = 0, bs: any, buffer: any, idx: any = 0, output: any = '';
         // get next character
         buffer = input.charAt(idx++);
         // character found in table? initialize bit storage and add its ascii value;
-        ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer,
+        ~buffer && (bs = bc % 4 ? <any>(bs * 64) + buffer : buffer,
           // and if not first of each 4 characters,
           // convert the first 8 bits to one ascii character
-          bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0
+          <any>(bc++ % 4)) ? output += <any>String.fromCharCode(255 & bs >> (-2 * bc & 6)) : <any>0
       ) {
         // try to find character in table (0-63, not found => -1)
         buffer = chars.indexOf(buffer);
       }
       return output;
     };
-    alert(_atob);
   }
 }
 

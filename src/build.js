@@ -110,7 +110,7 @@ function pe2Compile() {
 
 function tool2Compile() {
     runTypeScriptCompiler(
-        'tool2.ts', null,
+        'tool/tool2.ts', null,
         function(txt) {
             console.log('tool2.js: '+txt);
             postBuild2();
@@ -120,8 +120,8 @@ function tool2Compile() {
 }
 
 function postBuild2() {
-    fs.createReadStream('tool2.html').pipe(
-      new Inline("tool2.html", {
+    fs.createReadStream('tool/tool2.html').pipe(
+      new Inline("tool/tool2.html", {
         //default options:
         images: true, //inline images
         scripts: true, //inline scripts
