@@ -3,8 +3,328 @@
 <head>
 	<title>PE.js demo 2</title>
  	<script>window.startPageLoading = Date.now ? Date.now() : new Date().getTime();</script>
-	<script src="pe2.js"></script>
-    <script>/// <reference path='../pe2.d.ts' />
+	<script>var pe;
+(function (pe) {
+    /// <reference path='io2.ts' />
+    (function (headers) {
+        var DosHeader = (function () {
+            function DosHeader() {
+                this.mz = MZSignature.MZ;
+                /**
+                * Bytes on last page of file.
+                */
+                this.cblp = 144;
+                /**
+                * Pages in file.
+                */
+                this.cp = 3;
+                /**
+                * Relocations.
+                */
+                this.crlc = 0;
+                /**
+                * Size of header in paragraphs.
+                */
+                this.cparhdr = 4;
+                /**
+                * Minimum extra paragraphs needed.
+                */
+                this.minalloc = 0;
+                /**
+                * Maximum extra paragraphs needed.
+                */
+                this.maxalloc = 65535;
+                /**
+                * Initial (relative) SS value.
+                */
+                this.ss = 0;
+                /**
+                * Initial SP value.
+                */
+                this.sp = 184;
+                /**
+                * Checksum.
+                */
+                this.csum = 0;
+                /**
+                * Initial IP value.
+                */
+                this.ip = 0;
+                /**
+                * Initial (relative) CS value.
+                */
+                this.cs = 0;
+                /**
+                * File address of relocation table.
+                */
+                this.lfarlc = 64;
+                /**
+                * Overlay number.
+                */
+                this.ovno = 0;
+                this.res0 = 0;
+                this.res1 = 0;
+                /**
+                * OEM identifier (for e_oeminfo).
+                */
+                this.oemid = 0;
+                /**
+                * OEM information: number; e_oemid specific.
+                */
+                this.oeminfo = 0;
+                this.reserved0 = 0;
+                this.reserved1 = 0;
+                this.reserved2 = 0;
+                this.reserved3 = 0;
+                this.reserved4 = 0;
+                /**
+                * uint: File address of PE header.
+                */
+                this.lfanew = 0;
+            }
+            DosHeader.prototype.toString = function () {
+                var result = "[" + (this.mz === MZSignature.MZ ? "MZ" : typeof this.mz === "number" ? this.mz.toString(16).toUpperCase() + "h" : typeof this.mz) + "]" + ".lfanew=" + (typeof this.lfanew === "number" ? this.lfanew.toString(16).toUpperCase() + "h" : typeof this.lfanew);
+
+                return result;
+            };
+
+            DosHeader.prototype.populateFromUInt32Array = function (buf, pos) {
+                var i = buf[pos];
+                this.mz = i & 0xFFFF;
+                this.cblp = (i >> 16) & 0xFFFF;
+                i = buf[pos + 1];
+                this.cp = i & 0xFFFF;
+                this.crlc = (i >> 16) & 0xFFFF;
+                i = buf[pos + 2];
+                this.cparhdr = i & 0xFFFF;
+                this.minalloc = (i >> 16) & 0xFFFF;
+                i = buf[pos + 3];
+                this.maxalloc = i & 0xFFFF;
+                this.ss = (i >> 16) & 0xFFFF;
+                i = buf[pos + 4];
+                this.sp = i & 0xFFFF;
+                this.csum = (i >> 16) & 0xFFFF;
+                i = buf[pos + 5];
+                this.ip = i & 0xFFFF;
+                this.cs = (i >> 16) & 0xFFFF;
+                i = buf[pos + 6];
+                this.lfarlc = i & 0xFFFF;
+                this.ovno = (i >> 16) & 0xFFFF;
+                this.res0 = buf[pos + 7];
+                this.res1 = buf[pos + 8];
+                i = buf[pos + 9];
+                this.oemid = i & 0xFFFF;
+                this.oeminfo = (i >> 16) & 0xFFFF;
+                this.reserved0 = buf[pos + 10];
+                this.reserved1 = buf[pos + 11];
+                this.reserved2 = buf[pos + 12];
+                this.reserved3 = buf[pos + 13];
+                this.reserved4 = buf[pos + 14];
+
+                this.lfanew = buf[pos + 16];
+            };
+            DosHeader.size = 64;
+            return DosHeader;
+        })();
+        headers.DosHeader = DosHeader;
+
+        (function (MZSignature) {
+            MZSignature[MZSignature["MZ"] = "M".charCodeAt(0) + ("Z".charCodeAt(0) << 8)] = "MZ";
+        })(headers.MZSignature || (headers.MZSignature = {}));
+        var MZSignature = headers.MZSignature;
+    })(pe.headers || (pe.headers = {}));
+    var headers = pe.headers;
+})(pe || (pe = {}));
+/// <reference path='headers2.ts' />
+var pe;
+(function (pe) {
+    /*
+    * Logical 'universe' used to resolve inter-file references.
+    */
+    var LoaderContext = (function () {
+        function LoaderContext() {
+            this.loaded = [];
+        }
+        LoaderContext.prototype.beginRead = function (path) {
+            return new LoaderContext.FileReader(this, path);
+        };
+        return LoaderContext;
+    })();
+    pe.LoaderContext = LoaderContext;
+
+    (function (LoaderContext) {
+        /*
+        * State of reading a particular PE file.
+        */
+        var FileReader = (function () {
+            function FileReader(context, path) {
+                this.context = context;
+                this.buffer = null;
+                this._parsePhase = 0;
+                this.peFile = new pe.PEFile(path);
+            }
+            /*
+            * @see size property on input contains the number of 32-bit integers populated with data in @see buffer
+            * @return number of 32-bit integers expected
+            */
+            FileReader.prototype.parseNext = function () {
+                var offset = 0;
+                var size = this.size;
+
+                switch (this._parsePhase) {
+                    case 0:
+                        if (size < pe.headers.DosHeader.size) {
+                            // TODO: copy all back to zero offset
+                            this.size = size;
+                            return pe.headers.DosHeader.size - size;
+                        }
+                        this.peFile.dosHeader = new pe.headers.DosHeader();
+                        this.peFile.dosHeader.populateFromUInt32Array(this.buffer, offset);
+                        break;
+
+                    case 1:
+                        break;
+                }
+                throw null;
+            };
+            return FileReader;
+        })();
+        LoaderContext.FileReader = FileReader;
+    })(pe.LoaderContext || (pe.LoaderContext = {}));
+    var LoaderContext = pe.LoaderContext;
+
+    var PEFile = (function () {
+        // TODO: implement remaining headers
+        //peHeader: pe.headers.PEHeader = null;
+        //optionalHeader: pe.headers.OptionalHeader = null;
+        //sectionHeaders: pe.headers.SectionHeader[] = null;
+        function PEFile(path) {
+            this.path = path;
+            this.dosHeader = null;
+            this.dosStub = null;
+        }
+        return PEFile;
+    })();
+    pe.PEFile = PEFile;
+})(pe || (pe = {}));
+//# sourceMappingURL=pe2.js.map
+</script>
+    <script>var pe;
+(function (pe) {
+    (function (tool) {
+        /**
+        * loading embedded mscorlib.dll into a [typed] array of 32-bit integers
+        */
+        function loadMscorlib(callback, restIntervalMs, log) {
+            var pieceCount = 16;
+            var i = 0;
+            var base64 = null;
+            var binText = null;
+            var buf = null;
+
+            setTimeout(nextGetBase64, restIntervalMs);
+
+            function nextGetBase64() {
+                try  {
+                    log('nextGetBase64:' + i + '...');
+                    base64 = getBase64(i);
+                    setTimeout(nextGetBinText, restIntervalMs);
+                } catch (error) {
+                    callback(null, error);
+                }
+            }
+
+            function nextGetBinText() {
+                try  {
+                    log('nextGetBinText:' + i + '...');
+                    binText = getBinText(base64);
+                    if (buf === null)
+                        buf = createBuffer(binText.length * pieceCount);
+
+                    setTimeout(nextCopyBinTextToBuffer, restIntervalMs);
+                } catch (error) {
+                    callback(null, error);
+                }
+            }
+
+            function nextCopyBinTextToBuffer() {
+                try  {
+                    log('nextCopyBinTextToBuffer:' + i + '...');
+                    var pieceLength = buf.length / pieceCount;
+                    copyBinTextToBuffer(binText, buf, i * pieceLength, pieceLength);
+                    i++;
+
+                    if (i < pieceCount) {
+                        setTimeout(nextGetBase64, restIntervalMs);
+                    } else {
+                        log('mscorlib.dll[' + buf.length + '/' + pieceCount + '] completed');
+                        callback(buf, null);
+                    }
+                } catch (error) {
+                    callback(null, error);
+                }
+            }
+        }
+        tool.loadMscorlib = loadMscorlib;
+
+        function getBase64(i) {
+            var mscorlibDllScript = document.getElementById('mscorlib' + i + '.dll');
+            if (mscorlibDllScript === null) {
+                return null;
+            }
+
+            return mscorlibDllScript.innerHTML || mscorlibDllScript.textContent;
+        }
+
+        function getBinText(base64) {
+            if (!_atob)
+                createAtob();
+            return _atob(base64);
+        }
+
+        function createBuffer(int32Length) {
+            if ('Uint32Array' in window)
+                return new Uint32Array(int32Length);
+            else
+                return [];
+        }
+
+        function copyBinTextToBuffer(binText, buf, bufOffset, bufCount) {
+            for (var i = bufOffset; i < bufCount; i++) {
+                buf[i] = binText.charCodeAt(i / 4) | binText.charCodeAt(i / 4 + 1) << 8 | binText.charCodeAt(i / 4 + 2) << 16 | binText.charCodeAt(i / 4 + 3) << 24;
+            }
+        }
+
+        var _atob;
+        function createAtob() {
+            if (window.atob && false) {
+                _atob = window.atob;
+            } else {
+                var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=', INVALID_CHARACTER_ERR = ((function () {
+                    try  {
+                        document.createElement('$');
+                    } catch (error) {
+                        return error;
+                    }
+                })());
+                _atob = function (input) {
+                    input = input.replace(/=+$/, '');
+                    if (input.length % 4 == 1)
+                        throw INVALID_CHARACTER_ERR;
+                    for (// initialize result and counters
+                    var bc = 0, bs, buffer, idx = 0, output = ''; buffer = input.charAt(idx++); ~buffer && (bs = bc % 4 ? (bs * 64) + buffer : buffer, (bc++ % 4)) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0) {
+                        // try to find character in table (0-63, not found => -1)
+                        buffer = chars.indexOf(buffer);
+                    }
+                    return output;
+                };
+            }
+        }
+    })(pe.tool || (pe.tool = {}));
+    var tool = pe.tool;
+})(pe || (pe = {}));
+/// <reference path='../pe2.d.ts' />
+/// <reference path='mscorlib.ts' />
 
 
 var loadedFiles = {};
@@ -20,129 +340,27 @@ function init() {
     try  {
         var mscStart = getTime();
         var pageLoadTime = (mscStart - startPageLoading) / 1000;
-        var preLog = 'page ' + pageLoadTime + 's.';
-        log(preLog);
+        log('page ' + pageLoadTime + 's.');
 
-        var buf = null;
-        var pieceCount = 16;
-        var i = 0;
-        var base64;
-        var binText;
-
-        function nextGetBase64() {
-            try  {
-                log(preLog + ' nextGetBase64:' + i + '...');
-                base64 = getBase64(i);
-                setTimeout(nextGetBinText, 50);
-            } catch (error) {
-                alert(error + ' ' + error.message);
+        pe.tool.loadMscorlib(function (buffer, error) {
+            var mscTime = (getTime() - mscStart) / 1000;
+            if (error) {
+                log(error + ' ' + error.message + ' ' + mscTime + 's.');
+            } else {
+                log('mscorlib[' + buffer.length + '] ' + buffer[0].toString(16).toUpperCase() + 'h ' + mscTime + 's.');
             }
-        }
-
-        function nextGetBinText() {
-            try  {
-                log(preLog + ' nextGetBinText:' + i + '...');
-                binText = getBinText(base64);
-                if (buf === null)
-                    buf = createBuffer(binText.length * pieceCount);
-
-                setTimeout(nextCopyBinTextToBuffer, 50);
-            } catch (error) {
-                alert(error + ' ' + error.message);
-            }
-        }
-
-        function nextCopyBinTextToBuffer() {
-            try  {
-                log(preLog + ' nextCopyBinTextToBuffer:' + i + '...');
-                var pieceLength = buf.length / pieceCount;
-                copyBinTextToBuffer(binText, buf, i * pieceLength, pieceLength);
-                i++;
-
-                if (i < pieceCount) {
-                    setTimeout(nextGetBase64, 50);
-                } else {
-                    var mscTime = (getTime() - mscStart) / 1000;
-                    log(preLog + ' mscorlib.dll[' + buf.length + '/' + pieceCount + '] ' + mscTime + 's.');
-                }
-            } catch (error) {
-                alert(error + ' ' + error.message);
-            }
-        }
-
-        setTimeout(nextGetBase64, 50);
+        }, 25, log);
     } catch (error) {
         alert(error + ' ' + error.message);
     }
 
-    var logElement;
     function log(txt) {
-        if (!logElement) {
-            logElement = document.createElement('div');
-            document.body.appendChild(logElement);
-        }
-
-        //var current = logElement.textContent || logElement.innerText;
-        var newText = /*current +*/ txt;
-        logElement.textContent = newText;
-        logElement.innerText = newText;
-    }
-    log.toString = function () {
-        return logElement.textContent || logElement.innerText;
-    };
-}
-
-function getBase64(i) {
-    var mscorlibDllScript = document.getElementById('mscorlib' + i + '.dll');
-    if (mscorlibDllScript === null) {
-        return null;
-    }
-
-    return mscorlibDllScript.innerHTML || mscorlibDllScript.textContent;
-}
-
-function getBinText(base64) {
-    if (!_atob)
-        createAtob();
-    return _atob(base64);
-}
-
-function createBuffer(int32Length) {
-    if ('Uint32Array' in window)
-        return new Uint32Array(int32Length);
-    else
-        return [];
-}
-
-function copyBinTextToBuffer(binText, buf, bufOffset, bufCount) {
-    for (var i = bufOffset; i < bufCount; i++) {
-        buf[i] = binText.charCodeAt(i / 4) | binText.charCodeAt(i / 4 + 1) << 8 | binText.charCodeAt(i / 4 + 2) << 16 | binText.charCodeAt(i / 4 + 3) << 24;
-    }
-}
-
-var _atob;
-function createAtob() {
-    if (window.atob && false) {
-        _atob = window.atob;
-    } else {
-        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=', INVALID_CHARACTER_ERR = ((function () {
-            try  {
-                document.createElement('$');
-            } catch (error) {
-                return error;
-            }
-        })());
-        _atob = function (input) {
-            input = input.replace(/=+$/, '');
-            if (input.length % 4 == 1)
-                throw INVALID_CHARACTER_ERR;
-            for (// initialize result and counters
-            var bc = 0, bs, buffer, idx = 0, output = ''; buffer = input.charAt(idx++); ~buffer && (bs = bc % 4 ? (bs * 64) + buffer : buffer, (bc++ % 4)) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0) {
-                // try to find character in table (0-63, not found => -1)
-                buffer = chars.indexOf(buffer);
-            }
-            return output;
-        };
+        var logElement = document.createElement('div');
+        if ('textContent' in logElement)
+            logElement.textContent = txt;
+        else if ('innerText' in logElement)
+            logElement.innerText = txt;
+        document.body.appendChild(logElement);
     }
 }
 
