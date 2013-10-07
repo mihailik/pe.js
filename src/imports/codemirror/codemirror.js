@@ -353,8 +353,10 @@ window.CodeMirror = (function() {
       d.gutterFiller.style.width = d.gutters.offsetWidth + "px";
     } else d.gutterFiller.style.display = "";
 
-    if (mac_geLion && scrollbarWidth(d.measure) === 0)
+    if (mac_geLion && scrollbarWidth(d.measure) === 0) {
       d.scrollbarV.style.minWidth = d.scrollbarH.style.minHeight = mac_geMountainLion ? "18px" : "12px";
+      d.scrollbarV.style.pointerEvents = d.scrollbarH.style.pointerEvents = "none";
+    }
   }
 
   function visibleLines(display, doc, viewPort) {
@@ -935,8 +937,9 @@ window.CodeMirror = (function() {
   // smallest indentation, which tends to need the least context to
   // parse correctly.
   function findStartLine(cm, n, precise) {
-    var minindent, minline, doc = cm.doc, maxScan = cm.doc.mode.innerMode ? 1000 : 100;
-    for (var search = n, lim = n - maxScan; search > lim; --search) {
+    var minindent, minline, doc = cm.doc;
+    var lim = precise ? -1 : n - (cm.doc.mode.innerMode ? 1000 : 100);
+    for (var search = n; search > lim; --search) {
       if (search <= doc.first) return doc.first;
       var line = getLine(doc, search - 1);
       if (line.stateAfter && (!precise || search <= doc.frontier)) return search;
@@ -961,6 +964,7 @@ window.CodeMirror = (function() {
       line.stateAfter = save ? copyState(doc.mode, state) : null;
       ++pos;
     });
+    if (precise) doc.frontier = pos;
     return state;
   }
 
