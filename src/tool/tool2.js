@@ -1,4 +1,4 @@
-/// <reference path='pe2.d.ts' />
+/// <reference path='../pe2.d.ts' />
 
 
 var loadedFiles = {};

@@ -110,7 +110,7 @@ function pe2Compile() {
 
 function tool2Compile() {
     runTypeScriptCompiler(
-        'tool/tool2.ts', null,
+        'tool/tool2.ts', 'tool',
         function(txt) {
             console.log('tool2.js: '+txt);
             postBuild2();
