@@ -16,7 +16,7 @@ ifExists('imports/mono/mscorlib.dll',
       var pieceLength = mscorlibDll.length/pieceCount;
       var pieceOffset = pieceLength*i;
       var base64 = mscorlibDll.slice(pieceOffset, pieceOffset+pieceLength).toString('base64');
-      fs.writeFileSync('tool/mscorlib'+i+'.js', base64);
+      fs.writeFileSync('tool/mscorlib/mscorlib'+i+'.js', base64);
     }
   },
   function() {
