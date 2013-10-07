@@ -154,33 +154,27 @@ var pe;
         var FileReader = (function () {
             function FileReader(context, path) {
                 this.context = context;
-                this.buffer = null;
                 this._parsePhase = 0;
                 this.peFile = new pe.PEFile(path);
+                this.expectedSize = pe.headers.DosHeader.size;
             }
-            /*
-            * @see size property on input contains the number of 32-bit integers populated with data in @see buffer
-            * @return number of 32-bit integers expected
-            */
-            FileReader.prototype.parseNext = function () {
-                var offset = 0;
-                var size = this.size;
+            FileReader.prototype.parseNext = function (buffer, offset, size) {
+                while (true) {
+                    switch (this._parsePhase) {
+                        case 0:
+                            if (size < pe.headers.DosHeader.size) {
+                                return 0;
+                            }
+                            this.peFile.dosHeader = new pe.headers.DosHeader();
+                            this.peFile.dosHeader.populateFromUInt32Array(buffer, offset);
+                            offset += pe.headers.DosHeader.size;
+                            return offset;
 
-                switch (this._parsePhase) {
-                    case 0:
-                        if (size < pe.headers.DosHeader.size) {
-                            // TODO: copy all back to zero offset
-                            this.size = size;
-                            return pe.headers.DosHeader.size - size;
-                        }
-                        this.peFile.dosHeader = new pe.headers.DosHeader();
-                        this.peFile.dosHeader.populateFromUInt32Array(this.buffer, offset);
-                        break;
-
-                    case 1:
-                        break;
+                        case 1:
+                            throw new Error("DOS header read.");
+                    }
+                    throw new Error("Fallen through.");
                 }
-                throw null;
             };
             return FileReader;
         })();

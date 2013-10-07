@@ -8,6 +8,9 @@ module pe {
   export class LoaderContext {
     loaded: PEFile[] = [];
 
+    constructor() {
+    }
+
     beginRead(path: string): LoaderContext.FileReader {
       return new LoaderContext.FileReader(this, path);
     }
@@ -19,41 +22,34 @@ module pe {
      * State of reading a particular PE file.
      */
     export class FileReader {
-      size: number;
-      buffer: Uint32Array = null;
+      expectedSize: number;
       peFile: PEFile;
 
       private _parsePhase: number = 0;
 
       constructor(public context: LoaderContext, path: string) {
           this.peFile = new PEFile(path);
+          this.expectedSize = pe.headers.DosHeader.size;
       }
 
-      /*
-       * @see size property on input contains the number of 32-bit integers populated with data in @see buffer
-       * @return number of 32-bit integers expected 
-       */
-      parseNext(): number {
-        var offset = 0;
-        var size = this.size;
-
-        switch (this._parsePhase) {
-          case 0:
-            if (size < pe.headers.DosHeader.size) {
-              // TODO: copy all back to zero offset
+      parseNext(buffer: Uint32Array, offset: number, size: number): number {
+        while (true) {
+          switch (this._parsePhase) {
+            case 0:
+              if (size < pe.headers.DosHeader.size) {
+                return 0;
+              }
+              this.peFile.dosHeader = new pe.headers.DosHeader();
+              this.peFile.dosHeader.populateFromUInt32Array(buffer, offset);
+              offset += pe.headers.DosHeader.size;
+              return offset;
+  
+            case 1:
+              throw new Error("DOS header read.");
               
-              this.size = size;
-              return pe.headers.DosHeader.size - size;
-            }
-            this.peFile.dosHeader = new pe.headers.DosHeader();
-            this.peFile.dosHeader.populateFromUInt32Array(this.buffer, offset);
-            break;
-
-          case 1:
-            break;
-            
+          }
+          throw new Error("Fallen through.");
         }
-        throw null;
       }
     }
   }

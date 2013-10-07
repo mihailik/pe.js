@@ -85,17 +85,17 @@ declare module pe.headers {
 declare module pe {
     class LoaderContext {
         public loaded: PEFile[];
+        constructor();
         public beginRead(path: string): LoaderContext.FileReader;
     }
     module LoaderContext {
         class FileReader {
             public context: LoaderContext;
-            public size: number;
-            public buffer: Uint32Array;
+            public expectedSize: number;
             public peFile: PEFile;
             private _parsePhase;
             constructor(context: LoaderContext, path: string);
-            public parseNext(): number;
+            public parseNext(buffer: Uint32Array, offset: number, size: number): number;
         }
     }
     class PEFile {

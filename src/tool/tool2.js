@@ -116,42 +116,57 @@ var pe;
 /// <reference path='mscorlib.ts' />
 
 
-var loadedFiles = {};
+var pe;
+(function (pe) {
+    (function (tool) {
+        function getTime() {
+            if (Date.now)
+                return Date.now();
+            else
+                return new Date().getTime();
+        }
 
-function getTime() {
-    if (Date.now)
-        return Date.now();
-    else
-        return new Date().getTime();
-}
+        function beginProcessHeaders(buffer) {
+            var ctx = new pe.LoaderContext();
+            var reader = ctx.beginRead('mscorlib.dll');
+            reader.parseNext(buffer, 0, buffer.length);
+        }
 
-function init() {
-    try  {
-        var mscStart = getTime();
-        var pageLoadTime = (mscStart - startPageLoading) / 1000;
-        log('page ' + pageLoadTime + 's.');
+        function init() {
+            try  {
+                var mscStart = getTime();
+                var pageLoadTime = (mscStart - startPageLoading) / 1000;
+                log('page ' + pageLoadTime + 's.');
 
-        pe.tool.loadMscorlib(function (buffer, error) {
-            var mscTime = (getTime() - mscStart) / 1000;
-            if (error) {
-                log(error + ' ' + error.message + ' ' + mscTime + 's.');
-            } else {
-                log('mscorlib[' + buffer.length + '] ' + buffer[0].toString(16).toUpperCase() + 'h ' + mscTime + 's.');
+                pe.tool.loadMscorlib(function (buffer, error) {
+                    var mscTime = (getTime() - mscStart) / 1000;
+                    if (error) {
+                        log(error + ' ' + error.message + ' ' + mscTime + 's.');
+                    } else {
+                        log('mscorlib[' + buffer.length + '] ' + buffer[0].toString(16).toUpperCase() + 'h ' + mscTime + 's.');
+                        beginProcessHeaders(buffer);
+                    }
+                }, 25, log);
+            } catch (error) {
+                alert(error + ' ' + error.message);
             }
-        }, 25, log);
-    } catch (error) {
-        alert(error + ' ' + error.message);
-    }
 
-    function log(txt) {
-        var logElement = document.createElement('div');
-        if ('textContent' in logElement)
-            logElement.textContent = txt;
-        else if ('innerText' in logElement)
-            logElement.innerText = txt;
-        document.body.appendChild(logElement);
-    }
-}
+            function log(txt) {
+                var logElement = document.createElement('div');
+                if ('textContent' in logElement)
+                    logElement.textContent = txt;
+                else if ('innerText' in logElement)
+                    logElement.innerText = txt;
+                document.body.appendChild(logElement);
 
-window.onload = init;
+                if (logElement.scrollIntoView)
+                    logElement.scrollIntoView();
+            }
+        }
+        tool.init = init;
+    })(pe.tool || (pe.tool = {}));
+    var tool = pe.tool;
+})(pe || (pe = {}));
+
+window.onload = pe.tool.init;
 //# sourceMappingURL=tool2.js.map
