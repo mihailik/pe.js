@@ -119,19 +119,6 @@ var pe;
 var pe;
 (function (pe) {
     (function (tool) {
-        function getTime() {
-            if (Date.now)
-                return Date.now();
-            else
-                return new Date().getTime();
-        }
-
-        function beginProcessHeaders(buffer) {
-            var ctx = new pe.LoaderContext();
-            var reader = ctx.beginRead('mscorlib.dll');
-            reader.parseNext(buffer, 0, buffer.length);
-        }
-
         function init() {
             try  {
                 var mscStart = getTime();
@@ -150,20 +137,50 @@ var pe;
             } catch (error) {
                 alert(error + ' ' + error.message);
             }
-
-            function log(txt) {
-                var logElement = document.createElement('div');
-                if ('textContent' in logElement)
-                    logElement.textContent = txt;
-                else if ('innerText' in logElement)
-                    logElement.innerText = txt;
-                document.body.appendChild(logElement);
-
-                if (logElement.scrollIntoView)
-                    logElement.scrollIntoView();
-            }
         }
         tool.init = init;
+
+        function beginProcessHeaders(buffer) {
+            var ctx = new pe.LoaderContext();
+            var reader = ctx.beginRead('mscorlib.dll');
+            var offset = 0;
+
+            setTimeout(continueReading, 25);
+
+            function continueReading() {
+                try  {
+                    var parsed = reader.parseNext(buffer, offset, buffer.length - offset);
+                    if (parsed === 0) {
+                        alert('Complete!');
+                        return;
+                    }
+                    offset += parsed;
+
+                    setTimeout(continueReading, 25);
+                } catch (error) {
+                    alert(error + ' ' + error.message);
+                }
+            }
+        }
+
+        function log(txt) {
+            var logElement = document.createElement('div');
+            if ('textContent' in logElement)
+                logElement.textContent = txt;
+            else if ('innerText' in logElement)
+                logElement.innerText = txt;
+            document.body.appendChild(logElement);
+
+            if (logElement.scrollIntoView)
+                logElement.scrollIntoView();
+        }
+
+        function getTime() {
+            if (Date.now)
+                return Date.now();
+            else
+                return new Date().getTime();
+        }
     })(pe.tool || (pe.tool = {}));
     var tool = pe.tool;
 })(pe || (pe = {}));
