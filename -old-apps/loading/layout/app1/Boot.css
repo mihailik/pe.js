@@ -1,0 +1,67 @@
+.pe-boot {
+  position: absolute;
+  overflow: auto;
+  height: 100%;
+  width: 100%;
+  background: white;
+}
+
+.pe-boot-title-container {
+  margin-top: 10em;
+  width: 20em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pe-boot-title {
+  font-size: 350%;
+  font-weight: 200;
+}
+
+
+
+.pe-boot-progress {
+  margin-top: 0.5em;
+  height: 3px;
+  background: silver;
+}
+
+.pe-boot-progress-caption-container {
+  float: right;
+}
+
+.pe-boot-progress-caption {
+  position: absolute;
+  font-size: 90%;
+  margin-left: -1em;
+  margin-top: -1.5em;
+  opacity: 0.5;
+  font-weight: 100;
+}
+
+
+.pe-boot-version {
+  text-align: right;
+  font-size: 90%;
+}
+
+.pe-boot-details {
+  margin-top: 4em;
+  margin-left: 10em;
+  margin-right: 10em;
+}
+
+.pe-boot-progress .pe-loading-getdata {
+  height: 3px;
+  background: gray;
+}
+
+.pe-boot-progress .pe-loading-unmanaged {
+  height: 3px;
+  background: gold;
+}
+
+.pe-boot-progress .pe-loading-managed {
+  height: 3px;
+  background: forestgreen;
+}

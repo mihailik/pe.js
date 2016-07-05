@@ -1,0 +1,13 @@
+body {
+  overflow: none;
+  margin: 0px;
+  padding: 0px;
+  height: 100%;
+  font-family: 'Segoe UI', 'Ubuntu', 'Roboto', 'Droid Sans', 'Helvetica', 'sans-serif';
+}
+
+html {
+  overflow: auto;
+  margin: 0px;
+  padding: 0px;
+}

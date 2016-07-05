@@ -1,0 +1,25 @@
+<div class=pe-boot>
+
+  <div class=pe-boot-title-container>
+    <div class=pe-boot-title>PE.js</div>
+    <div class=pe-boot-progress
+         ><div
+               data-bind="style: { width: Math.floor(loading.progressRatio()*100)+'%' }, css: loading.className"
+               ><div
+                     class=pe-boot-progress-caption-container
+                     ><div
+                           class=pe-boot-progress-caption
+                           data-bind="text: Math.floor(loading.progressRatio()*100)+'%'"
+                         ></div></div></div></div>
+    <div class=pe-boot-version>v<span data-bind="text: appVersion">0.1??</span></div>
+  </div>
+
+  <div class=pe-boot-details>
+    HTML tool for parsing EXE, DLL and SYS files alike, especially compiled managed .NET code like C# binaries.
+    Showing guts and headers and multitude of internal fields, timestamps and flags.
+    <br>
+    There is no upload to any server whatsoever, all the processing is done entirely within HTML and JavaScript page.
+    No extra permissions are required.
+  </div>
+  
+</div>

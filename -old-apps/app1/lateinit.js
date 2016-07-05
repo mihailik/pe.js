@@ -1,0 +1,1 @@
+new pe.app1.Application(document.getElementById('dragSite'))

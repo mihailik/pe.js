@@ -1,0 +1,6 @@
+{
+    "compilerOptions": {
+        "out": "pe.js",
+        "sourceMap": false
+    }
+}

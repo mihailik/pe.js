@@ -1,0 +1,49 @@
+.pe-page-header {
+  position: fixed;
+  top: 0px; left: 0px;
+  height: 6em;
+  width: 100%;
+  z-index: 1000;
+}
+
+
+.pe-page-treedetails {
+  margin-top: 6em;
+  min-height: 60%;
+}
+
+.pe-page-tree {
+  float: left;
+  width: 25%;
+  border-right: solid 1px silver;
+  overflow: auto;
+}
+
+.pe-page-details {
+  margin-left: 25%;
+  overflow: auto;
+}
+
+.pe-tree-node {
+  cursor: hand; cursor: pointer;
+  padding: 3px;
+  white-space: nowrap;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.pe-tree-icon {
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  border: solid 3px silver;
+  margin: 1px;
+  margin-right: 4px;
+}
+.pe-tree-node-children {
+  margin-left:0.8em;
+  margin-bottom: 1em;
+}

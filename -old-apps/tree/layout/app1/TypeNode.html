@@ -1,0 +1,11 @@
+<div class='pe-tree-node pe-type'>
+  <span class=pe-tree-icon></span>
+  <span data-bind="text: name"></span>
+</div>
+<!-- ko if: isExpanded -->
+<div class=pe-tree-node-children>
+<!-- ko template: { foreach: fields, name: 'FieldNode' } --><!-- /ko -->
+<!-- ko template: { foreach: properties, name: 'PropertyNode' } --><!-- /ko -->
+<!-- ko template: { foreach: methods, name: 'MethodNode' } --><!-- /ko -->
+</div>
+<!-- /ko -->

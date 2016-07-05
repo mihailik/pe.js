@@ -1,0 +1,126 @@
+.body {
+  overflow: auto;
+  margin: 0px;
+  padding: 0px;
+  height: 100%;
+  font-family: 'Segoe UI', 'Ubuntu', 'Roboto','Helvetica', 'sans-serif';
+}
+
+.pe-boot-shadow {
+  font-size: 200%;
+  background: white;
+  opacity: 0.3;
+  position: fixed;
+  left: 0px; top: 0px; width:100%; height: 100%;
+  padding: 5em;
+  text-align: center;
+}
+
+.pe-progress {
+  font-size: 200%;
+  background: gold;
+  opacity: 0.3;
+  position: fixed;
+  left: 0px; top: 0px; width:100%; height: 100%;
+  padding: 2em;
+}
+
+.pe-assembly {
+  font-size: 200%;
+}
+.pe-namespace-lead {
+  opacity: 0.5;
+}
+.pe-namespace-root {
+  opacity: 0.5;
+}
+.pe-namespace-child-namespaces {
+  margin-left: 1.5em;
+}
+.pe-namespace-types {
+  margin-left: 1.5em;
+}
+.pe-namespace-in {
+  margin: 3px;
+  background: #E0E0E0;
+}
+.pe-namespace-out {
+  margin: 3px;
+  background: #F0F0F0;
+}
+
+.pe-type {
+}
+.pe-type-name {
+  color: navy;
+}
+.pe-type-members {
+  margin-left: 0.5em;
+  padding: 2px;
+  padding-left: 0.5em;
+  padding-bottom: 0.3em;
+  margin-bottom: 0.3em;
+}
+.pe-namespace-in .pe-type-members {
+  background: #F0F0F0;
+}
+.pe-namespace-in .pe-type-members {
+  background: white;
+}
+.pe-method-accessor {
+  opacity: 0.5;
+}
+.pe-field-accessor {
+  opacity: 0.5;
+}
+
+.dragSite {
+  height: 100%; margin: 10px 5px;
+}
+
+.dragover {
+  border: solid 4px gold;
+}
+.leftAddress {
+  font-size: 80%;
+  opacity: 0.5;
+}
+
+.headerTitle {
+  font-size: 200%;
+  opacity: 0.5;
+}
+.important-background {
+  background: rgb(255, 214, 130);
+  border: solid 1px gold;
+  margin: -2px;
+  padding: 1px;
+  border-radius: 3px;
+}
+.important-border{
+  border: solid 1px gold;
+  margin: -2px;
+  padding: 1px;
+  border-radius: 3px;
+}
+
+.field-value {
+  position: relative;
+}
+
+.field-value .label {
+  position: relative;
+  opacity: 0.6;
+}
+
+.field-value .value-aligned {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+.field-value .value {
+}
+
+.bytes {
+  background: rgb(230, 228, 228);
+}

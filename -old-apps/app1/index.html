@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+
+<title>PE.js mscorlib.dll...</title>
+<style>
+<%=uglifyCSS(
+  'app1/layout/app.css',
+  'app1/layout/loading/Boot.css',
+  'app1/layout/commonPage.css',
+  'app1/layout/managed/page.css')%>
+</style>
+
+</head>
+<body>
+
+<div id="dragSite">
+  <!-- let's start with some dummy layout... -->
+  <%=embedFile('app1/layout/loading/Boot.html')%>
+</div>
+
+<!-- Early init -->
+<script><%=embedFile('app1/earlyinit.js')%></script>
+
+
+<!-- Knockout HTML templates -->
+<script id=Boot type=text/html><%=embedFile('app1/layout/loading/Boot.html')%></script>
+<script id=Managed type=text/html><%=embedFile('app1/layout/managed/page.html')%></script>
+<script id=Unmanaged type=text/html><%=embedFile('app1/layout/unmanaged/page.html')%></script>
+
+<script id=AssemblyDetails type=text/html><%=embedFile('app1/layout/managed/AssemblyDetails.html')%></script>
+<script id=FieldNode type=text/html><%=embedFile('app1/layout/tree/FieldNode.html')%></script>
+<script id=MethodNode type=text/html><%=embedFile('app1/layout/tree/MethodNode.html')%></script>
+<script id=NamespaceNode type=text/html><%=embedFile('app1/layout/tree/NamespaceNode.html')%></script>
+<script id=PEHeadersNode type=text/html><%=embedFile('app1/layout/tree/PEHeadersNode.html')%></script>
+<script id=PropertyNode type=text/html><%=embedFile('app1/layout/tree/PropertyNode.html')%></script>
+<script id=ReferencesNode type=text/html><%=embedFile('app1/layout/tree/ReferencesNode.html')%></script>
+<script id=TypeNode type=text/html><%=embedFile('app1/layout/tree/TypeNode.html')%></script>
+<script id=UnmanagedImportsNode type=text/html><%=embedFile('app1/layout/tree/UnmanagedImportsNode.html')%></script>
+<script id=UnmanagedResourceNode type=text/html><%=embedFile('app1/layout/tree/UnmanagedResourceNode.html')%></script>
+<script id=UnmanagedResourcesNode type=text/html><%=embedFile('app1/layout/tree/UnmanagedResourcesNode.html')%></script>
+
+<script id=PEFileHeaders type=text/html><%=embedFile('app1/layout/pefile.html')%></script>
+<script id=Type type=text/html><%=embedFile('app1/layout/managed/Type.html')%></script>
+<script id=MethodInfo type=text/html><%=embedFile('app1/layout/managed/MethodInfo.html')%></script>
+<script id=FieldInfo type=text/html><%=embedFile('app1/layout/managed/FieldInfo.html')%></script>
+<script id=CustomAttribute type=text/html><%=embedFile('app1/layout/managed/CustomAttribute.html')%></script>
+<style><%=embedFile('app1/layout/pe.css')%></style>
+
+<!--Knockout-->
+<script><%=embedFile('app1/imports/knockout/knockout-3.0.0.js')%></script>
+
+<!-- PE.js code -->
+<script id=pejs>
+  <%=typescriptBuild()%>
+</script>
+
+
+<!-- Sample binary encoded -->
+<div id=files style="display: none">
+<script id=data00 type=text/base64><%=embedFile('app1/mscorlib/00.base64')%></script>
+<script id=data01 type=text/base64><%=embedFile('app1/mscorlib/01.base64')%></script>
+<script id=data02 type=text/base64><%=embedFile('app1/mscorlib/02.base64')%></script>
+<script id=data03 type=text/base64><%=embedFile('app1/mscorlib/03.base64')%></script>
+<script id=data04 type=text/base64><%=embedFile('app1/mscorlib/04.base64')%></script>
+<script id=data05 type=text/base64><%=embedFile('app1/mscorlib/05.base64')%></script>
+<script id=data06 type=text/base64><%=embedFile('app1/mscorlib/06.base64')%></script>
+<script id=data07 type=text/base64><%=embedFile('app1/mscorlib/07.base64')%></script>
+<script id=data08 type=text/base64><%=embedFile('app1/mscorlib/08.base64')%></script>
+<script id=data09 type=text/base64><%=embedFile('app1/mscorlib/09.base64')%></script>
+<script id=data10 type=text/base64><%=embedFile('app1/mscorlib/10.base64')%></script>
+<script id=data11 type=text/base64><%=embedFile('app1/mscorlib/11.base64')%></script>
+<script id=data12 type=text/base64><%=embedFile('app1/mscorlib/12.base64')%></script>
+<script id=data13 type=text/base64><%=embedFile('app1/mscorlib/13.base64')%></script>
+<script id=data14 type=text/base64><%=embedFile('app1/mscorlib/14.base64')%></script>
+<script id=data15 type=text/base64><%=embedFile('app1/mscorlib/15.base64')%></script>
+</div>
+  
+<!-- Late init -->
+<script><%=embedFile('app1/lateinit.js')%></script>
+
+</body>
+</html>

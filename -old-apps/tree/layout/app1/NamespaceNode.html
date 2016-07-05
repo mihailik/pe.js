@@ -1,0 +1,7 @@
+<div class='pe-tree-node pe-namespace'>
+  <span class=pe-tree-icon></span><span data-bind="text: name?name:'{root}'"></span>
+</div>
+<div class=pe-tree-node-children
+     data-bind="visible: isExpanded">
+<!-- ko template: { foreach: types, name: 'TypeNode' } --><!-- /ko -->
+</div>

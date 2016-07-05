@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<head>
+<title>PE.js loading...</title>
+
+<!-- CSS needs to be populated up-front, nothing can be displayed correctly without it -->
+<style>
+<%=uglifyCSS('app/boot/boot.css')%>
+</style>
+
+</head>
+<body>
+
+<!--
+  All UI shall be contained within this element.
+
+  At startup it might contain junk because the HTML was saved/scraped,
+  so the first thing to do is to destroy the content here and replace it with boot UI.
+-->
+<div id=uisite>PE.js booting...</div>
+
+
+<!-- Small chunk of code cleaning up uisite and putting some basic boot UI in there. -->
+<script>
+<%=embedFile('app/boot/boot.js')%>
+</script>
+
+
+
+<!-- libraries -->
+<script>
+<%=embedFile('app/imports/raphael/raphael-min.js')%>
+</script>
+<script>console.log(2)</script>
+
+<!-- Actual PE.js code. -->
+<script>
+<%=typescriptBuild()%>
+</script>
+
+
+<!-- EXE/DLL binary content embedded into HTML DOM -->
+<div id=datasite style="display: none;" data-total-size=16>
+
+  <div data-file=mscorlib.dll >
+    <div id=data00 data-complete-size=1><%=embedFile('app1/mscorlib/00.base64')%> </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data01 data-complete-size=2><%=embedFile('app1/mscorlib/01.base64')%>   </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data02 data-complete-size=3><%=embedFile('app1/mscorlib/02.base64')%>   </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data03 data-complete-size=4><%=embedFile('app1/mscorlib/03.base64')%>   </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data04 data-complete-size=5><%=embedFile('app1/mscorlib/04.base64')%>   </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data05 data-complete-size=6><%=embedFile('app1/mscorlib/05.base64')%>   </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data06 data-complete-size=7><%=embedFile('app1/mscorlib/06.base64')%>   </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data07 data-complete-size=8><%=embedFile('app1/mscorlib/07.base64')%>   </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data08 data-complete-size=9><%=embedFile('app1/mscorlib/08.base64')%>   </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data09 data-complete-size=10><%=embedFile('app1/mscorlib/09.base64')%> </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data10 data-complete-size=11><%=embedFile('app1/mscorlib/10.base64')%> </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data11 data-complete-size=12><%=embedFile('app1/mscorlib/11.base64')%> </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data12 data-complete-size=13><%=embedFile('app1/mscorlib/12.base64')%>  </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data13 data-complete-size=14><%=embedFile('app1/mscorlib/13.base64')%> </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data14 data-complete-size=15><%=embedFile('app1/mscorlib/14.base64')%> </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+    <div id=data15 data-complete-size=16><%=embedFile('app1/mscorlib/15.base64')%> </div>
+    <script>pe.app.boot.reportDownloadProgress()</script>
+  </div>
+
+</div>
+
+
+<script> pe.app.boot.bootingComplete(); </script>
+
+</body>
+</html>
