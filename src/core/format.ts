@@ -5,10 +5,10 @@ module pe {
    */
   export function formatEnum(value, type): string {
     if (!value) {
-      if (typeof value == "null")
-        return "null";
-      else if (typeof value == "undefined")
-        return "undefined";
+      if (value === null)
+        return 'null';
+      else if (typeof value == 'undefined')
+        return 'undefined';
     }
 
     var textValue = type[value];
@@ -32,7 +32,7 @@ module pe {
     // uncovered bits are taken as a hex literal
     var spill = value & ~accountedEnumValueMask;
     if (spill)
-      enumValues.push("0x" + spill.toString(16).toUpperCase());
+      enumValues.push('0x' + spill.toString(16).toUpperCase());
 
     textValue = enumValues.join(' | ');
 
@@ -43,11 +43,11 @@ module pe {
     if (!bytes)
       return null;
     
-    var result = "";
+    var result = '';
     for (var i = 0; i < bytes.length; i++) {
       var hex = bytes[i].toString(16).toUpperCase();
       if (hex.length==1)
-        hex = "0" + hex;
+        hex = '0' + hex;
       result += hex;
     }
 

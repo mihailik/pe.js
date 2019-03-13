@@ -13,10 +13,10 @@ module pe {
       var result: string;
       result = this.lo.toString(16);
       if (this.hi != 0) {
-        result = ("0000").substring(result.length) + result;
+        result = ('0000').substring(result.length) + result;
         result = this.hi.toString(16) + result;
       }
-      result = result.toUpperCase() + "h";
+      result = result.toUpperCase() + 'h';
       return result;
     }
   }
