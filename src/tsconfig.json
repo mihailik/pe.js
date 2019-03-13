@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "out": "pe.js",
-        "sourceMap": false
+        "sourceMap": true,
+        "inlineSources": true
     }
 }
