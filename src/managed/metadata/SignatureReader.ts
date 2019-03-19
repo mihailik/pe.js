@@ -189,13 +189,13 @@ module pe.managed.metadata {
       return null;
     }
 
-    readConstraint(reader: io.BufferReader) { 
+    readConstraint(reader: io.BufferReader): any { 
     }
       
     readParam(reader: io.BufferReader) {
     }
 
-    readCustomMod(reader: io.BufferReader) {
+    readCustomMod(reader: io.BufferReader): any {
     }
 
     readType(reader: io.BufferReader): Type {

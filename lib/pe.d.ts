@@ -52,7 +52,7 @@ declare module pe.headers {
         /**
          * Common Language Runtime, look for ClrDirectory at that offset.
          */
-        Clr = 14,
+        Clr = 14
     }
 }
 declare module pe.headers {
@@ -116,7 +116,7 @@ declare module pe.headers {
         /**
          * The image is terminal server aware.
          */
-        TerminalServerAware = 32768,
+        TerminalServerAware = 32768
     }
 }
 declare module pe.headers {
@@ -184,12 +184,12 @@ declare module pe.headers {
         /**
          * The bytes of the word are reversed. This flag is obsolete.
          */
-        BytesReversedHi = 32768,
+        BytesReversedHi = 32768
     }
 }
 declare module pe.headers {
     enum MZSignature {
-        MZ,
+        MZ
     }
 }
 declare module pe.headers {
@@ -309,19 +309,19 @@ declare module pe.headers {
         /**
          * CEE
          */
-        CEE = 49390,
+        CEE = 49390
     }
 }
 declare module pe.headers {
     enum PEMagic {
         NT32 = 267,
         NT64 = 523,
-        ROM = 263,
+        ROM = 263
     }
 }
 declare module pe.headers {
     enum PESignature {
-        PE,
+        PE
     }
 }
 declare module pe.headers {
@@ -495,7 +495,7 @@ declare module pe.headers {
         /**
          * The section can be written to.
          */
-        MemoryWrite = 2147483648,
+        MemoryWrite = 2147483648
     }
 }
 declare module pe.headers {
@@ -555,7 +555,7 @@ declare module pe.headers {
         /**
          * Boot application.
          */
-        BootApplication = 16,
+        BootApplication = 16
     }
 }
 declare module pe.managed.metadata {
@@ -582,7 +582,7 @@ declare module pe.managed.metadata {
          * some implementations might use this bit to indicate
          * that a CIL-to-native-code compiler should generate CIL-to-native code map).
          */
-        EnableJITcompileTracking = 32768,
+        EnableJITcompileTracking = 32768
     }
 }
 declare module pe.managed.metadata {
@@ -592,7 +592,7 @@ declare module pe.managed.metadata {
         SHA1 = 32772,
         SHA256 = 32780,
         SHA384 = 32781,
-        SHA512 = 32782,
+        SHA512 = 32782
     }
 }
 declare module pe.managed.metadata {
@@ -626,7 +626,7 @@ declare module pe.managed.metadata {
         /**
          * (ECMA para23.1.16), used to encode '.managed..' in the parameter list, see ECMA para15.3.
          */
-        Sentinel = 65,
+        Sentinel = 65
     }
 }
 declare module pe.managed.metadata {
@@ -637,12 +637,12 @@ declare module pe.managed.metadata {
         StrongNameSigned = 8,
         NativeEntryPoint = 16,
         TrackDebugData = 65536,
-        IsIbcoptimized = 131072,
+        IsIbcoptimized = 131072
     }
 }
 declare module pe.managed.metadata {
     enum ClrMetadataSignature {
-        Signature = 1112167234,
+        Signature = 1112167234
     }
 }
 declare module pe.managed.metadata {
@@ -769,7 +769,7 @@ declare module pe.managed.metadata {
         /**
          * Used in custom attributes to specify an enum (ECMA-335 para23.3).
          */
-        CustomAttribute_Enum_ = 85,
+        CustomAttribute_Enum_ = 85
     }
 }
 declare module pe.managed.metadata {
@@ -784,7 +784,7 @@ declare module pe.managed.metadata {
         /**
          * CLI provides 'special' behavior, depending upon the name of the event.
          */
-        RTSpecialName = 1024,
+        RTSpecialName = 1024
     }
 }
 declare module pe.managed.metadata {
@@ -873,7 +873,7 @@ declare module pe.managed.metadata {
         /**
          * Field has RVA.
          */
-        HasFieldRVA = 256,
+        HasFieldRVA = 256
     }
 }
 declare module pe.managed.metadata {
@@ -888,14 +888,14 @@ declare module pe.managed.metadata {
         /**
          * This is a resource file or other non-metadata-containing file.
          */
-        ContainsNoMetaData = 1,
+        ContainsNoMetaData = 1
     }
 }
 declare module pe.managed.metadata {
     enum ManifestResourceAttributes {
         VisibilityMask = 7,
         Public = 1,
-        Private = 2,
+        Private = 2
     }
 }
 declare module pe.managed.metadata {
@@ -923,7 +923,7 @@ declare module pe.managed.metadata {
         UnmanagedExport = 8,
         RTSpecialName = 4096,
         HasSecurity = 16384,
-        RequireSecObject = 32768,
+        RequireSecObject = 32768
     }
 }
 declare module pe.managed.metadata {
@@ -942,7 +942,7 @@ declare module pe.managed.metadata {
         Synchronized = 32,
         NoInlining = 8,
         MaxMethodImplVal = 65535,
-        NoOptimization = 64,
+        NoOptimization = 64
     }
 }
 declare module pe.managed.metadata {
@@ -952,7 +952,7 @@ declare module pe.managed.metadata {
         Other = 4,
         AddOn = 8,
         RemoveOn = 16,
-        Fire = 32,
+        Fire = 32
     }
 }
 declare module pe.managed.metadata {
@@ -969,7 +969,7 @@ declare module pe.managed.metadata {
         CallConvCdecl = 512,
         CallConvStdcall = 768,
         CallConvThiscall = 1024,
-        CallConvFastcall = 1280,
+        CallConvFastcall = 1280
     }
 }
 declare module pe.managed.metadata {
@@ -979,7 +979,7 @@ declare module pe.managed.metadata {
         Optional = 16,
         HasDefault = 4096,
         HasFieldMarshal = 8192,
-        Unused = 53216,
+        Unused = 53216
     }
 }
 declare module pe.managed.metadata {
@@ -987,7 +987,7 @@ declare module pe.managed.metadata {
         SpecialName = 512,
         RTSpecialName = 1024,
         HasDefault = 4096,
-        Unused = 59903,
+        Unused = 59903
     }
 }
 declare module pe.managed.metadata {
@@ -1022,7 +1022,7 @@ declare module pe.managed.metadata {
         BeforeFieldInit = 1048576,
         RTSpecialName = 2048,
         HasSecurity = 262144,
-        IsTypeForwarder = 2097152,
+        IsTypeForwarder = 2097152
     }
 }
 declare module pe.headers {
@@ -1247,7 +1247,7 @@ declare module pe.headers {
         sectionHeaders: SectionHeader[];
         toString(): string;
         read(reader: io.BufferReader, async?: AsyncCallback<PEFileHeaders>): void;
-        private _continueRead(reader, async, stage);
+        private _continueRead;
     }
 }
 declare module pe.headers {
@@ -1294,14 +1294,14 @@ declare module pe.headers {
 }
 declare module pe.headers {
     class AddressRange {
-        address: number;
-        size: number;
+        address?: number;
+        size?: number;
         constructor(address?: number, size?: number);
         mapRelative(offset: number): number;
         toString(): string;
     }
     class AddressRangeMap extends AddressRange {
-        virtualAddress: number;
+        virtualAddress?: number;
         constructor(address?: number, size?: number, virtualAddress?: number);
         toString(): string;
     }
@@ -1371,8 +1371,8 @@ declare module pe.io {
         readUtf8Z(maxLength: number): string;
         getVirtualOffset(): number;
         setVirtualOffset(rva: number): void;
-        private _getView(numBytes);
-        private _tryMapToVirtual(offset);
+        private _getView;
+        private _tryMapToVirtual;
     }
     class ArrayReader extends BufferReader {
         private _array;
@@ -1390,10 +1390,10 @@ declare module pe.io {
         readUtf8Z(maxLength: number): string;
         getVirtualOffset(): number;
         setVirtualOffset(rva: number): void;
-        private _tryMapToVirtual2(offset);
+        private _tryMapToVirtual2;
     }
-    function getFileBufferReader(file: File, onsuccess: (BufferReader) => void, onfailure: (Error) => void): void;
-    function getUrlBufferReader(url: string, onsuccess: (BufferReader) => void, onfailure: (Error) => void): void;
+    function getFileBufferReader(file: File, onsuccess: (BufferReader: any) => void, onfailure: (Error: any) => void): void;
+    function getUrlBufferReader(url: string, onsuccess: (BufferReader: any) => void, onfailure: (Error: any) => void): void;
 }
 declare module pe.managed {
     class AppDomain {
@@ -1479,10 +1479,10 @@ declare module pe.managed {
 }
 declare module pe.managed {
     class Type {
-        baseType: Type;
-        assembly: Assembly;
-        namespace: string;
-        name: string;
+        baseType?: Type;
+        assembly?: Assembly;
+        namespace?: string;
+        name?: string;
         isSpeculative: boolean;
         attributes: metadata.TypeAttributes;
         fields: FieldInfo[];
@@ -1572,8 +1572,8 @@ declare module pe.managed.metadata {
         blobs: headers.AddressRange;
         tables: headers.AddressRange;
         read(metadataBaseAddress: number, streamCount: number, reader: io.BufferReader): void;
-        private _readAlignedNameString(reader);
-        private _readGuidForStream(reader);
+        private _readAlignedNameString;
+        private _readGuidForStream;
     }
 }
 declare module pe.managed.metadata {
@@ -1594,12 +1594,12 @@ declare module pe.managed.metadata {
         /** ECMA-335 II.23.2.5 */
         readLocalVarSig(reader: io.BufferReader): void;
         readRefType(reader: io.BufferReader): Type;
-        readConstraint(reader: io.BufferReader): void;
+        readConstraint(reader: io.BufferReader): any;
         readParam(reader: io.BufferReader): void;
-        readCustomMod(reader: io.BufferReader): void;
+        readCustomMod(reader: io.BufferReader): any;
         readType(reader: io.BufferReader): Type;
-        private _readCompressed(reader);
-        private _readCompressedSigned(reader);
+        private _readCompressed;
+        private _readCompressedSigned;
     }
     module SignatureReader {
         /** ECMA-335 II.23.2.3 */
@@ -1618,7 +1618,7 @@ declare module pe.managed.metadata {
             HasThis = 32,
             ExplicitThis = 64,
             /** ECMA-335 II.23.1.16 and II.15.3 */
-            Sentinel = 65,
+            Sentinel = 65
         }
     }
 }
@@ -1635,7 +1635,7 @@ declare module pe.managed.metadata {
         copyFieldRange(fields: FieldInfo[], start: number, end?: number, owner?: Type): void;
         copyMethodRange(methods: MethodInfo[], start: number, end?: number, owner?: Type): void;
         copyParamRange(parameters: ParameterInfo[], start: number, end: number, owner?: MethodInfo): void;
-        private _copyDefRange(defs, tableKind, start, end?, owner?);
+        private _copyDefRange;
         lookupTable(tableKind: TableKind, tableIndex: number): any;
         lookupResolutionScope(codedIndex: number): any;
         lookupTypeDefOrRef(codedIndex: number): Type;
@@ -1694,7 +1694,7 @@ declare module pe.managed.metadata {
         NestedClass = 41,
         GenericParam = 42,
         MethodSpec = 43,
-        GenericParamConstraint = 44,
+        GenericParamConstraint = 44
     }
 }
 declare module pe.managed.metadata {
@@ -1706,9 +1706,9 @@ declare module pe.managed.metadata {
         constructor(_reader: io.BufferReader, _tables: any[][], stringCount: number, guidCount: number, blobCount: number, _codedIndexReaders: CodedIndexReaders);
         private readStringIndex;
         readString(): number;
-        private _getDirectReader(spaceSize);
-        private _getTableIndexReader(tableKind);
-        private _getCodedIndexReader(tables);
+        private _getDirectReader;
+        private _getTableIndexReader;
+        private _getCodedIndexReader;
         readByte(): number;
         readShort(): number;
         readInt(): number;
@@ -1748,10 +1748,10 @@ declare module pe.managed.metadata {
         stringIndices: string[];
         codedIndexReaders: CodedIndexReaders;
         read(reader: io.BufferReader, stringCount: number, guidCount: number, blobCount: number): void;
-        private _readTableRowCounts(valid, tableReader);
-        private _populateTableObjects(table, Ctor, count);
-        private _populateTableRows(tableCounts);
-        private _readTableRows(tableCounts, reader);
+        private _readTableRowCounts;
+        private _populateTableObjects;
+        private _populateTableRows;
+        private _readTableRows;
     }
 }
 declare module pe.managed.metadata {
@@ -1773,7 +1773,7 @@ declare module pe.managed.tables {
         culture: number;
         read(reader: metadata.TableReader): void;
         precomplete(reader: metadata.TableCompletionReader): void;
-        private _hashPublicKey(pk);
+        private _hashPublicKey;
     }
 }
 declare module pe.managed.tables {
@@ -2188,7 +2188,7 @@ declare module pe.unmanaged {
          */
         forwarder: string;
         static readExports(reader: io.BufferReader, range: headers.AddressRange): DllExports;
-        private readExportEntry(reader, range);
+        private readExportEntry;
     }
 }
 declare module pe.unmanaged {
@@ -2218,7 +2218,7 @@ declare module pe.unmanaged {
         dllName: string;
         timeDateStamp: Date;
         static read(reader: io.BufferReader, result?: DllImport[]): DllImport[];
-        private readEntry(reader);
+        private readEntry;
     }
 }
 declare module pe.unmanaged {
@@ -2244,7 +2244,7 @@ declare module pe.unmanaged {
         dataEntries: ResourceDataEntry[];
         toString(): string;
         read(reader: io.BufferReader): void;
-        private readCore(reader, baseVirtualOffset);
+        private readCore;
         readName(reader: io.BufferReader): string;
     }
 }

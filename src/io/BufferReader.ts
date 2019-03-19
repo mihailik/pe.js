@@ -421,7 +421,7 @@ module pe.io {
 
       try {
         var resultArrayBuffer: ArrayBuffer;
-        resultArrayBuffer = reader.result;
+        resultArrayBuffer = reader.result as ArrayBuffer;
 
         result = new BufferReader(resultArrayBuffer);
       }
