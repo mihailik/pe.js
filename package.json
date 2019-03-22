@@ -10,13 +10,13 @@
   "dependencies": {
     "@material-ui/core": "^3.9.2",
     "@material-ui/icons": "^3.0.2",
-    "@types/node": "^11.11.3",
-    "@types/react-dom": "^16.8.2",
+    "@types/node": "^11.11.5",
+    "@types/react-dom": "^16.8.3",
     "jssha": "^2.3.1",
-    "parcel-bundler": "^1.12.1",
-    "react": "^16.8.4",
-    "react-dom": "^16.8.4",
-    "typescript": "^3.3.3333"
+    "parcel-bundler": "^1.12.3",
+    "react": "^16.8.5",
+    "react-dom": "^16.8.5",
+    "typescript": "^3.3.4000"
   },
   "devDependencies": {},
   "scripts": {
