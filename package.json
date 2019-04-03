@@ -20,9 +20,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "start": "parcel app/index.html --port 6440 --out-dir .cache/dev --public-url . --open",
-    "build": "tsc -p ./src/tsconfig.json && rimraf ./dist/*.* && parcel build app/index.html --public-url .",
-    "build:lib": "tsc -p ./src/tsconfig.json",
+    "build": "tsc -b ./app/tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

@@ -1,6 +1,10 @@
 {
     "compilerOptions": {
+        "outFile": "../app.js",
         "sourceMap": true,
         "inlineSources": true
-    }
+    },
+    "references": [
+        { "path": "../src" }
+    ]
 }

@@ -3,6 +3,7 @@
         "out": "./lib/pe.js",
         "sourceMap": true,
         "inlineSources": true,
-        "declaration": true
+        "declaration": true,
+        "composite": true
     }
 }
