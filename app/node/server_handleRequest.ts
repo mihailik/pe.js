@@ -1,6 +1,6 @@
 namespace node {
 
-  declare namespace server_handleRequest {
+  export declare namespace server_handleRequest {
     type Options = {
       baseDir: string,
       server: import('http').Server,
@@ -20,11 +20,12 @@ namespace node {
 
     const requestURL = URL.parse(
       request.url,
-      /* parseQueryString */ true);
+      true /* parseQueryString */);
 
     const requestPath = requestURL.path.replace(/^[\.\/\\]+/, '').replace(/\[\.\/\\]*\//g, '/');
     if (requestPath === '' || requestPath === '/') {
-      await handleRoot(options);
+      await server_handleRoot(options);
+      return;
     }
 
     const resolvedPath = path.resolve(baseDir, requestPath);

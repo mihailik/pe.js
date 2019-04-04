@@ -53,7 +53,7 @@ var node;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        serverPromise = node.server();
+                        serverPromise = node.server(__dirname);
                         return [4 /*yield*/, serverPromise];
                     case 1:
                         _a.sent();
@@ -65,40 +65,140 @@ var node;
 })(node || (node = {}));
 var node;
 (function (node) {
-    function server() {
+    function server(baseDir) {
         return __awaiter(this, void 0, void 0, function () {
             function tryPort(port) {
-                return __awaiter(this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
-                        return [2 /*return*/];
+                return new Promise(function (resolve) {
+                    var http = require('http');
+                    var srv = http.createServer(function (request, response) {
+                        node.server_handleRequest({ baseDir: baseDir, server: srv, port: port, request: request, response: response });
                     });
+                    srv.on('error', function () {
+                        resolve(null);
+                    });
+                    srv.on('listening', function () {
+                        resolve(srv);
+                    });
+                    srv.listen(port);
                 });
             }
-            var basePort, i, lowPromise, highPromise, srv;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var basePort, i, lowPromise, highPromise, srv, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         basePort = 0;
                         i = 0;
-                        _a.label = 1;
+                        _b.label = 1;
                     case 1:
-                        if (!(i < __filename.length)) return [3 /*break*/, 4];
+                        if (!(i < __filename.length)) return [3 /*break*/, 6];
                         basePort += __filename.charCodeAt(i);
                         basePort = basePort % 4000;
                         lowPromise = tryPort(6340 + basePort);
                         highPromise = tryPort(12891 + basePort);
                         return [4 /*yield*/, lowPromise];
                     case 2:
-                        srv = _a.sent();
-                        _a.label = 3;
+                        _a = (_b.sent());
+                        if (_a) return [3 /*break*/, 4];
+                        return [4 /*yield*/, highPromise];
                     case 3:
+                        _a = (_b.sent());
+                        _b.label = 4;
+                    case 4:
+                        srv = _a;
+                        if (srv)
+                            return [2 /*return*/, srv];
+                        _b.label = 5;
+                    case 5:
                         i++;
                         return [3 /*break*/, 1];
-                    case 4: return [2 /*return*/];
+                    case 6: return [2 /*return*/];
                 }
             });
         });
     }
     node.server = server;
+})(node || (node = {}));
+var node;
+(function (node) {
+    function server_handleRequest(options) {
+        return __awaiter(this, void 0, void 0, function () {
+            var baseDir, server, port, request, response, fs, path, URL, requestURL, requestPath, resolvedPath, fileContent;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        baseDir = options.baseDir, server = options.server, port = options.port, request = options.request, response = options.response;
+                        fs = require('fs');
+                        path = require('path');
+                        URL = require('url');
+                        requestURL = URL.parse(request.url, true /* parseQueryString */);
+                        requestPath = requestURL.path.replace(/^[\.\/\\]+/, '').replace(/\[\.\/\\]*\//g, '/');
+                        if (!(requestPath === '' || requestPath === '/')) return [3 /*break*/, 2];
+                        return [4 /*yield*/, node.server_handleRoot(options)];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                    case 2:
+                        resolvedPath = path.resolve(baseDir, requestPath);
+                        return [4 /*yield*/, readFileIfExistsAsync(resolvedPath)];
+                    case 3:
+                        fileContent = _a.sent();
+                        if (fileContent)
+                            return [2 /*return*/, response.end(fileContent)];
+                        response.statusCode = 404;
+                        response.end();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    }
+    node.server_handleRequest = server_handleRequest;
+    function readFileIfExistsAsync(fullPath) {
+        var fs = require('fs');
+        return new Promise(function (resolve) {
+            fs.readFile(fullPath, function (error, buffer) {
+                if (buffer)
+                    resolve(buffer);
+                else
+                    resolve(null);
+            });
+        });
+    }
+})(node || (node = {}));
+var node;
+(function (node) {
+    var thisScriptPromise;
+    function server_handleRoot(options) {
+        return __awaiter(this, void 0, void 0, function () {
+            function readThisScript() {
+                return __awaiter(this, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        return [2 /*return*/, new Promise(function (resolve, reject) {
+                                var fs = require('fs');
+                                fs.readFile(__filename, function (error, data) {
+                                    if (error)
+                                        reject(error);
+                                    else
+                                        resolve(data);
+                                });
+                            })];
+                    });
+                });
+            }
+            var thisScriptData;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (typeof thisScriptPromise !== 'string')
+                            thisScriptPromise = readThisScript();
+                        return [4 /*yield*/, thisScriptPromise];
+                    case 1:
+                        thisScriptData = _a.sent();
+                        options.response.end(thisScriptData);
+                        return [2 /*return*/];
+                }
+            });
+        });
+    }
+    node.server_handleRoot = server_handleRoot;
 })(node || (node = {}));
 //# sourceMappingURL=app.js.map

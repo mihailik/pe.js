@@ -11,7 +11,7 @@ namespace node {
   }
 
   async function bootAsync() {
-    const serverPromise = server();
+    const serverPromise = server(__dirname);
 
     await serverPromise;
   }
