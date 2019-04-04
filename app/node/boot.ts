@@ -13,6 +13,9 @@ namespace node {
   async function bootAsync() {
     const serverPromise = server(__dirname);
 
+    const srv = await serverPromise;
+    console.log('Running server on port ' + srv.port);
+
     await serverPromise;
   }
 

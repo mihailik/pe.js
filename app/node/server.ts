@@ -15,7 +15,7 @@ namespace node {
     }
 
     function tryPort(port: number) {
-      return new Promise<import('http').Server | null>(resolve => {
+      return new Promise<{ server: import('http').Server, port: number } | null>(resolve => {
         const http = require('http') as typeof import('http');
         const srv = http.createServer((request, response) => {
           server_handleRequest({ baseDir, server: srv, port, request, response });
@@ -26,7 +26,7 @@ namespace node {
         });
 
         srv.on('listening', () => {
-          resolve(srv);
+          resolve({ server: srv, port });
         });
 
         srv.listen(port);

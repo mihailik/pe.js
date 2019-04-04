@@ -2,9 +2,15 @@
     "compilerOptions": {
         "outFile": "../app.js",
         "sourceMap": true,
-        "inlineSources": true
+        "inlineSources": true,
+
+        "allowJs": true
     },
     "references": [
         { "path": "../src" }
+    ],
+    "include": [
+        "**/**.ts",
+        "../lib/pe.js"
     ]
 }

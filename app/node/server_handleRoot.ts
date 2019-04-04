@@ -6,9 +6,11 @@ namespace node {
     if (typeof thisScriptPromise !== 'string')
       thisScriptPromise = readThisScript();
     
-    const thisScriptData = await thisScriptPromise
+    const thisScriptData = await thisScriptPromise;
+
+    const wholeHTML = '<' + 'script' + '>' + thisScriptData + '</' + 'script' + '>';
     
-      options.response.end(thisScriptData);
+      options.response.end(wholeHTML);
 
     async function readThisScript() {
       return new Promise<Buffer>((resolve, reject) => {
