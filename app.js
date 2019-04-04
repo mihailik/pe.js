@@ -35,7 +35,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 /// <reference types="node" />
 (function () {
-    var html = "\n  <!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta http-equiv=\"X-UA-Compatible\" content=\"ie=edge\">\n    <title>PE.js</title>\n</head>\n<body>\n    <h2>PE.js</h2>\n    <p>\n        Loading...\n    </p>\n\n    <script></script>\n</body>\n</html>\n";
+    var html = "\n  <!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta http-equiv=\"X-UA-Compatible\" content=\"ie=edge\">\n    <title>PE.js</title>\n</head>\n<body>\n    <h2>PE.js</h2>\n    <p>\n        Loading...\n    </p>\n\n    <script></" + '' + "script>\n</body>\n</html>\n";
 })();
 var node;
 (function (node) {
@@ -58,11 +58,53 @@ var node;
                     case 1:
                         srv = _a.sent();
                         console.log('Running server on port ' + srv.port);
+                        node.runBrowser('http://localhost:' + srv.port + '/');
                         return [4 /*yield*/, serverPromise];
                     case 2:
                         _a.sent();
                         return [2 /*return*/];
                 }
+            });
+        });
+    }
+})(node || (node = {}));
+var node;
+(function (node) {
+    function runBrowser(url) {
+        return __awaiter(this, void 0, void 0, function () {
+            var fs, path, child_process, chromePath, chromeProcess_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        fs = require('fs');
+                        path = require('path');
+                        child_process = require('child_process');
+                        chromePath = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
+                        return [4 /*yield*/, existAsync(chromePath)];
+                    case 1:
+                        if (!_a.sent()) return [3 /*break*/, 3];
+                        chromeProcess_1 = child_process.spawn('"' + chromePath + '" --app=' + url, {
+                            shell: false
+                        });
+                        return [4 /*yield*/, new Promise(function (resolve, reject) {
+                                chromeProcess_1.on('error', function (error) {
+                                    reject(error);
+                                });
+                            })];
+                    case 2:
+                        _a.sent();
+                        _a.label = 3;
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
+    }
+    node.runBrowser = runBrowser;
+    function existAsync(fullPath) {
+        return new Promise(function (resolve) {
+            var fs = require('fs');
+            fs.exists(fullPath, function (result) {
+                resolve(result);
             });
         });
     }
@@ -208,6 +250,9 @@ var node;
 })(node || (node = {}));
 if (typeof process !== 'undefined' && process && typeof process.exit === 'function') {
     node.boot();
+}
+else if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+    alert('Hey, from there!');
 }
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {

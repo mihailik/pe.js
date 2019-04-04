@@ -16,6 +16,8 @@ namespace node {
     const srv = await serverPromise;
     console.log('Running server on port ' + srv.port);
 
+    runBrowser('http://localhost:' + srv.port + '/');
+
     await serverPromise;
   }
 

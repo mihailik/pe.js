@@ -16,7 +16,7 @@
         Loading...
     </p>
 
-    <script></script>
+    <script></${''}script>
 </body>
 </html>
 `;
