@@ -7,11 +7,12 @@ namespace node {
 
     const chromePath = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
     if (await existAsync(chromePath)) {
+      console.log('chrome:');
+      console.log(chromePath, ['--app=' + url, '--new-window'].join(' '));
       const chromeProcess = child_process.spawn(
-        '"' + chromePath + '" --app=' + url,
-        {
-          shell: false
-        });
+        chromePath,
+        ['--app=' + url, '--new-window'],
+        { shell: false });
 
       await new Promise<void>((resolve, reject) => {
         chromeProcess.on('error', error => {

@@ -83,9 +83,9 @@ var node;
                         return [4 /*yield*/, existAsync(chromePath)];
                     case 1:
                         if (!_a.sent()) return [3 /*break*/, 3];
-                        chromeProcess_1 = child_process.spawn('"' + chromePath + '" --app=' + url, {
-                            shell: false
-                        });
+                        console.log('chrome:');
+                        console.log(chromePath, ['--app=' + url, '--new-window'].join(' '));
+                        chromeProcess_1 = child_process.spawn(chromePath, ['--app=' + url, '--new-window'], { shell: false });
                         return [4 /*yield*/, new Promise(function (resolve, reject) {
                                 chromeProcess_1.on('error', function (error) {
                                     reject(error);
