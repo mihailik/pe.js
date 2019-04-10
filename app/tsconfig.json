@@ -3,14 +3,11 @@
         "outFile": "../app.js",
         "sourceMap": true,
         "inlineSources": true,
-
-        "allowJs": true
+        "incremental": true
     },
-    "references": [
-        { "path": "../src" }
-    ],
     "include": [
         "**/**.ts",
-        "../lib/pe.js"
+        "../lib/pe.js",
+        "../src/**/**.ts"
     ]
 }

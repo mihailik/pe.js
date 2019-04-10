@@ -1,6 +1,6 @@
 namespace node {
 
-  export async function runBrowser(url: string) {
+  export async function startBrowser(url: string) {
     const fs = require('fs') as typeof import('fs');
     const path = require('path') as typeof import('path');
     const child_process = require('child_process') as typeof import('child_process');

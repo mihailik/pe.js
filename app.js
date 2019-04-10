@@ -33,10 +33,51 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /// <reference types="node" />
 (function () {
     var html = "\n  <!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta http-equiv=\"X-UA-Compatible\" content=\"ie=edge\">\n    <title>PE.js</title>\n</head>\n<body>\n    <h2>PE.js</h2>\n    <p>\n        Loading...\n    </p>\n\n    <script></" + '' + "script>\n</body>\n</html>\n";
 })();
+var browser;
+(function (browser) {
+    function boot() {
+        return __awaiter(this, void 0, void 0, function () {
+            var rootElement, docBody;
+            return __generator(this, function (_a) {
+                rootElement = getRootElement();
+                rootElement.style.cssText = "\n    background: white;\n    color: black;\n    font-family: Segoe UI, Tahoma, Verdana, Roboto, Helvetica, San Francisco, Sans Serif;\n    font-size: 10pt;\n    ";
+                docBody = document.body;
+                if (!docBody) {
+                    docBody = document.createElement('body');
+                    if (!document.body)
+                        rootElement.appendChild(docBody);
+                }
+                docBody.innerHTML = "\n    <h2> Loaded </h2>\n    ";
+                return [2 /*return*/];
+            });
+        });
+    }
+    browser.boot = boot;
+    function getRootElement() {
+        var bodyOrHead = document.body ||
+            document.head ||
+            document.getElementsByTagName('body')[0] ||
+            document.getElementsByTagName('head')[0];
+        return bodyOrHead && bodyOrHead.parentElement;
+    }
+})(browser || (browser = {}));
 var node;
 (function (node) {
     function boot() {
@@ -58,53 +99,12 @@ var node;
                     case 1:
                         srv = _a.sent();
                         console.log('Running server on port ' + srv.port);
-                        node.runBrowser('http://localhost:' + srv.port + '/');
+                        node.startBrowser('http://localhost:' + srv.port + '/');
                         return [4 /*yield*/, serverPromise];
                     case 2:
                         _a.sent();
                         return [2 /*return*/];
                 }
-            });
-        });
-    }
-})(node || (node = {}));
-var node;
-(function (node) {
-    function runBrowser(url) {
-        return __awaiter(this, void 0, void 0, function () {
-            var fs, path, child_process, chromePath, chromeProcess_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        fs = require('fs');
-                        path = require('path');
-                        child_process = require('child_process');
-                        chromePath = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
-                        return [4 /*yield*/, existAsync(chromePath)];
-                    case 1:
-                        if (!_a.sent()) return [3 /*break*/, 3];
-                        console.log('chrome:');
-                        console.log(chromePath, ['--app=' + url, '--new-window'].join(' '));
-                        chromeProcess_1 = child_process.spawn(chromePath, ['--app=' + url, '--new-window'], { shell: false });
-                        return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                chromeProcess_1.on('error', function (error) {
-                                    reject(error);
-                                });
-                            })];
-                    case 2:
-                        _a.sent();
-                        _a.label = 3;
-                    case 3: return [2 /*return*/];
-                }
-            });
-        });
-    }
-    node.runBrowser = runBrowser;
-    function existAsync(fullPath) {
-        return new Promise(function (resolve) {
-            var fs = require('fs');
-            fs.exists(fullPath, function (result) {
-                resolve(result);
             });
         });
     }
@@ -239,7 +239,7 @@ var node;
                         return [4 /*yield*/, thisScriptPromise];
                     case 1:
                         thisScriptData = _a.sent();
-                        wholeHTML = '<' + 'script' + '>' + thisScriptData + '</' + 'script' + '>';
+                        wholeHTML = '<' + 'body' + '><' + 'script' + '>' + thisScriptData + '</' + 'script' + '></' + 'body' + '>';
                         options.response.end(wholeHTML);
                         return [2 /*return*/];
                 }
@@ -248,27 +248,53 @@ var node;
     }
     node.server_handleRoot = server_handleRoot;
 })(node || (node = {}));
+var node;
+(function (node) {
+    function startBrowser(url) {
+        return __awaiter(this, void 0, void 0, function () {
+            var fs, path, child_process, chromePath, chromeProcess_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        fs = require('fs');
+                        path = require('path');
+                        child_process = require('child_process');
+                        chromePath = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
+                        return [4 /*yield*/, existAsync(chromePath)];
+                    case 1:
+                        if (!_a.sent()) return [3 /*break*/, 3];
+                        console.log('chrome:');
+                        console.log(chromePath, ['--app=' + url, '--new-window'].join(' '));
+                        chromeProcess_1 = child_process.spawn(chromePath, ['--app=' + url, '--new-window'], { shell: false });
+                        return [4 /*yield*/, new Promise(function (resolve, reject) {
+                                chromeProcess_1.on('error', function (error) {
+                                    reject(error);
+                                });
+                            })];
+                    case 2:
+                        _a.sent();
+                        _a.label = 3;
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
+    }
+    node.startBrowser = startBrowser;
+    function existAsync(fullPath) {
+        return new Promise(function (resolve) {
+            var fs = require('fs');
+            fs.exists(fullPath, function (result) {
+                resolve(result);
+            });
+        });
+    }
+})(node || (node = {}));
 if (typeof process !== 'undefined' && process && typeof process.exit === 'function') {
     node.boot();
 }
 else if (typeof window !== 'undefined' && typeof window.alert === 'function') {
-    alert('Hey, from there!');
+    browser.boot();
 }
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b)
-                if (b.hasOwnProperty(p))
-                    d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var pe;
 (function (pe) {
     /**
@@ -2360,9 +2386,7 @@ var pe;
                 return chars.join("");
             };
             BufferReader.prototype.readAsciiZ = function (maxLength) {
-                if (maxLength === void 0) {
-                    maxLength = 1024;
-                }
+                if (maxLength === void 0) { maxLength = 1024; }
                 var v = this._getView(length);
                 var chars = [];
                 var byteLength = 0;
@@ -2506,9 +2530,7 @@ var pe;
                 return chars.join("");
             };
             ArrayReader.prototype.readAsciiZ = function (maxLength) {
-                if (maxLength === void 0) {
-                    maxLength = 1024;
-                }
+                if (maxLength === void 0) { maxLength = 1024; }
                 var chars = [];
                 var byteLength = 0;
                 while (true) {
@@ -5569,5 +5591,4 @@ var pe;
         unmanaged.ResourceDirectoryEntry = ResourceDirectoryEntry;
     })(unmanaged = pe.unmanaged || (pe.unmanaged = {}));
 })(pe || (pe = {}));
-//# sourceMappingURL=pe.js.map
 //# sourceMappingURL=app.js.map

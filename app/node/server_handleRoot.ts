@@ -8,7 +8,7 @@ namespace node {
     
     const thisScriptData = await thisScriptPromise;
 
-    const wholeHTML = '<' + 'script' + '>' + thisScriptData + '</' + 'script' + '>';
+    const wholeHTML = '<' + 'body' + '><' + 'script' + '>' + thisScriptData + '</' + 'script' + '></' + 'body' + '>';
     
       options.response.end(wholeHTML);
 
